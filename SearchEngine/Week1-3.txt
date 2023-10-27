@@ -1,0 +1,36 @@
+Week 1 of project:
+
+    Create a working environment on your computers
+    Create a repository (Gitlab, Github, …) for your project 1 and make sure all group members can access it
+    Start with adding a .gitignore and a requirements.txt file to the repository (requirements are requests and beautifulsoup4)
+    Create a `crawler.py` file and define the skeleton of the crawling algorithm: 
+        Crawl (=get and parse) all HTML pages on a certain server 
+        that can directly or indirectly be reached from a start URL 
+        by following links on the pages. 
+        Do not follow links to URLs on other servers and only process HTML responses. 
+        Test the crawler with a simple website, e.g., https://vm009.rz.uos.de/crawl/index.html 
+    Build an in-memory index from the HTML text content found. 
+        The most straightforward index is a dictionary with words as keys and lists of URLs that refer to pages that include the word.
+    Add a function 'search' that takes a list of words as a parameter and returns (by using the index) a list of links to all pages that contain all the words from the list. 
+    Test the functionality.
+
+ 
+
+Don't worry if you don't get that far! Use the element chat and the Friday session to ask questions, report problems and tell about hurdles and obstacles!
+
+ 
+
+Week 2:
+
+    Replace the simple index with code using the woosh library ( will be introduced in week 3 - https://whoosh.readthedocs.io/en/latest/intro.html ).
+    Build a flask app (will be introduced in week 3 - ) with two URLs that shows the following behaviour:
+        GET home URL: Show search form
+        GET search URL with parameter q: Search for q using the index and display a list of URLs as links
+
+ 
+
+Week 3:
+
+    Improve the index by adding information (ideas will be presented in week 4)
+    Improve the output by including title and teaser text
+    Install your search engine on the demo server provided (will be introduced in week 4)
