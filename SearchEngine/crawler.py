@@ -170,6 +170,7 @@ class Crawler:
         """
         Crawls everything it finds (not recommended)
         Only works when a start url is given when the crawler was created. 
+        At the moment the crawler does not append new urls to url_stack by itself, as the task is to only crawl one server
         """
         
         while self.url_stack:
@@ -177,12 +178,13 @@ class Crawler:
             self.crawl(self.url_stack.pop(0))
             self.timeout_in_seconds = self.timeout_default
 
-    def crawl(self, start_url):
+    def crawl(self, start_url, batch = 20):
         """
         crawls all websites that can be reached from a start_url
 
         Args:
             start_url (str): a string containing an url
+            batch (int): After how many webpages to update the index
         """
 
         # check time to give an estimation of time left
@@ -234,6 +236,9 @@ class Crawler:
                     # update visited list
                     # add also errors and not html so they are not visited again. 
                     self.urls_visited.append(next_url)
+
+                    if len(self.preliminary_index) >= batch:
+                        self.pre_to_Index()
                 
                 except requests.exceptions.Timeout:
 
