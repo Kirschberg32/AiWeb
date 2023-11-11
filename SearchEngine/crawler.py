@@ -14,13 +14,12 @@ class Crawler:
     A crawler object that is able to crawl one server's html pages. 
 
     Attributes: 
-        start_url (str): The url to start crawling from
         url_stack_same_server (list): a list containing all the found urls on the same server to visit next during crawling
         url_stack (list): a list of all urls found on different servers we want to visit (stays empty after the start_url is removed at the 
             moment because we only want to crawl one server)
         urls_visited (list): a list with all the urls that where visited already by this crawler object
         index_path (str): A directory of where to save or load the whoosh index
-        preliminary_index (list): A temporary database for index information before saving it in the whoosh index
+        preliminary_index (list): A temporary database for index information before saving it in the whoosh index. Each element has the structure (soup (bs4.BeautifulSoup), url (string))
         custom_headers (dict): Used as the header for requests
         timeout_default (int): The default value for timeout to reset timeout when switching to crawl a different server
         timeout_in_seconds (int): The timeout value, that can increase if the server is too slow (each time by 1). 
@@ -32,12 +31,11 @@ class Crawler:
         """
 
         Args: 
-            start_url (str): The url to start crawling from
             name (str): The name used for custom_headers, 
-        
+            index_path (str): A directory of where to save or load the whoosh index
+            start_url (str): The url to start crawling from, if "" you have to give it to crawl() as an argument before you can start crawling
         """
 
-        self.start_url = start_url
         self.url_stack_same_server = []
         if start_url:
             self.url_stack = [start_url,] # only used when crawling different servers too
@@ -58,7 +56,10 @@ class Crawler:
 
     def open_index(self):
         """
-        
+        Opens or creates the index of this crawler
+
+        returns:
+            index (whoosh.index.Index): The index to use for creating writer and searcher
         """
         # create folders if they do not exist
         if not os.path.isdir(self.index_path):
@@ -76,7 +77,11 @@ class Crawler:
     
     def add_to_Index(self,soup,url):
         """
-        
+        Adds one single element to the whoosh index
+
+        Args: 
+            soup (bs4.BeautifulSoup): The object containing the information about the webpage
+            url (string): The url where the data of the soup was found
         """
 
         index = self.open_index()
@@ -85,7 +90,8 @@ class Crawler:
 
     def pre_to_Index(self):
         """
-        
+        Adds all elements in self.preliminary_index to the whoosh index with title, text and url
+        the preliminary_index will be emptied afterwards
         """
 
         index = self.open_index()
@@ -99,23 +105,35 @@ class Crawler:
 
     def __del__(self):
         """
-        
+        Should 
         """
         self.pre_to_Index()
 
     def append_same_server(self,url):
         """
-        
+        Appends a new url to the same server list. Please check beforehand if it really is the same server. 
+        It only checks whether the url already is in the list and whether it was already visited. Then it does not append it. 
+
+        Args:
+            url (string): The url to append
         """
 
         if (not url in self.url_stack_same_server) and (not url in self.urls_visited):
             self.url_stack_same_server.append(url)
 
     
-    def find_url(self,soup, original_url, original_url_parsed):
+    def find_url(self,soup, original_url, original_url_parsed = None):
         """
-        
+        Finds all urls in a given soup object
+
+        Args:
+            soup (bs4.BeautifulSoup): the data to search in
+            original_url (string): the url where the data is from (used to create full urls from relative ones)
+            original_url_parsed (urllib.parse.ParseResult): the same url as in original_url but already parsed (if not given it is created)
         """
+
+        if not original_url_parsed:
+            original_url_parsed = urlparse(original_url)
 
         # analyse it to find other urls, 
         for l in soup.find_all("a"):
@@ -150,7 +168,8 @@ class Crawler:
 
     def crawl_all(self):
         """
-        
+        Crawls everything it finds (not recommended)
+        Only works when a start url is given when the crawler was created. 
         """
         
         while self.url_stack:
@@ -160,14 +179,16 @@ class Crawler:
 
     def crawl(self, start_url):
         """
-        
+        crawls all websites that can be reached from a start_url
+
+        Args:
+            start_url (str): a string containing an url
         """
 
         # check time to give an estimation of time left
         start = time.time()
 
         self.timeout_in_seconds = self.timeout_default
-        parsed = urlparse(start_url)
 
         self.url_stack_same_server.append(start_url)
 
@@ -185,7 +206,7 @@ class Crawler:
             else: 
                 time_estimation = self.timeout_in_seconds
             print(f"Total: {len_visited} from {len_visited+len_togo}; {self.convert_time(time.time() - start)}")
-            print(f"Estimated time left for {len_togo}: {self.convert_time(time_estimation)}")
+            print(f"Estimated time left for {len_togo} pages: {self.convert_time(time_estimation)}")
 
             # if not visited recently
             if next_url not in self.urls_visited:
@@ -234,7 +255,17 @@ class Crawler:
 
     def search(self, input_string):
         """
-        
+        Searches in the index for a search term.
+        It searches in the title and content and is a default OR search. It uses BM25F as a scoring algorithm. 
+        If there are no matches the input_string will be corrected. Then it will be searched again. 
+
+        Args: 
+            input_string (str): A string containing the search term
+
+        Returns:
+            value (str): A string containing the corrected search term if it was corrected and results were found 
+            total_hits (int): The estimated number of total hits
+            results (list): A list containing sets for each hit [(title, url, highlights), ...]
         """
 
         # helpful: https://whoosh.readthedocs.io/en/latest/searching.html
@@ -268,15 +299,30 @@ class Crawler:
             # use highlightes to have text around the results. but content is not stored
             # taking too much space if 
             if total_hits > 0:
-                return 0, total_hits, [(r["title"], r["url"], r.highlights("content")) for r in results]
+                return "", total_hits, [(r["title"], r["url"], r.highlights("content")) for r in results]
             else:
-                return 0,0,[]
+                return "",0,[]
 
     def convert_time(self,time):
-        minutes = int(time/60)
+        """
+        A method to convert a time in seconds into a readable string
+
+        Args:
+            time (int): time in seconds to convert
+
+        Returns:
+            string (str): The pretty string for printing readable time
+        """
+        hours = int(time/60/60)
+        minutes = int((time/60)%60)
         seconds = int(time%60)
+        
+        # convert to having a a zero in front
+        minutes_str = f"0{minutes}" if minutes < 10 else str(minutes)
+        seconds_str = f"0{seconds}" if seconds < 10 else str(seconds)
+
+        if hours > 0:
+            return f"{hours}:{minutes_str}:{seconds_str} h"
         if minutes > 0:
-            if seconds < 10:
-                return f"{minutes}:0{seconds} min"
-            return f"{minutes}:{seconds} min"
-        return f"{seconds} sec"
+            return f"{minutes_str}:{seconds_str} min"
+        return f"{seconds_str} sec"
