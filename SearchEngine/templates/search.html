@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <header>
+        <title>Search Engine</title>
+    </header>
+    <body>
+        <form action='search'method='get'>
+            <label for="field">Search:</label>
+            <input type='search' id="field" name='q' value = {{req}} ></input>
+            <input type="submit" value="Submit"></input>
+        </form>
+        <h1>
+            {{match}}
+        </h1>
+        <ul>
+            {% for item in result %}
+            <li><a href={{item}}>{{item}}</li>
+            {% endfor %}
+        </ul>
+    </body>
+</html>
