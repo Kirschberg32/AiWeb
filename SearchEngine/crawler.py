@@ -6,7 +6,7 @@ import time
 import os
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
-from whoosh.qparser import MultifieldParser
+from whoosh.qparser import MultifieldParser, QueryParser
 from whoosh import scoring, qparser
 
 class Crawler:
@@ -212,51 +212,33 @@ class Crawler:
 
             # if not visited recently
             if next_url not in self.urls_visited:
-                # get the content
-                try:
-                    # to not overwhelm the server wait before request again (politeness)
-                    time.sleep(self.timeout_in_seconds / 2)
 
-                    response = requests.get(next_url, timeout=self.timeout_in_seconds, headers=self.custom_headers)
+                # to not overwhelm the server wait before request again (politeness)
+                time.sleep(self.timeout_in_seconds / 2)
 
-                    print("\n",response.status_code, next_url)
+                # get page
+                code, soup = self.get_page(next_url)
+
+                if code == -1: # if the server is too slow
+                    print("The server of: ", next_url, " is too slowly.")
+                    print("The crawler will stop to crawl this server now.")
+                    self.url_stack_same_server = []
+                elif code ==1: # if 0 then the returns where not html or not ok code
+                    # update index
+                    self.preliminary_index.append((soup,next_url))
                     
-                    # if no error message and it is an html response
-                    if response.ok and "text/html" in response.headers["content-type"]:
+                    # finds all urls and saves the ones we want to visit in the future
+                    self.find_url(soup,next_url,urlparse(next_url))
 
-                        # analyse it and update index
-                        soup = BeautifulSoup(response.content, 'html.parser')       
+                # update visited list
+                # add also errors and not html so they are not visited again. 
+                self.urls_visited.append(next_url)
 
-                        # update index
-                        self.preliminary_index.append((soup,next_url))
-                        
-                        # finds all urls and saves the ones we want to visit in the future
-                        self.find_url(soup,next_url,urlparse(next_url))
-
-                    # update visited list
-                    # add also errors and not html so they are not visited again. 
-                    self.urls_visited.append(next_url)
-
-                    if len(self.preliminary_index) >= batch:
-                        self.pre_to_Index()
-                
-                except requests.exceptions.Timeout:
-
-                    if self.timeout_in_seconds > 20:
-                        print("The server of: ", next_url, " is too slowly.")
-                        print("The crawler will stop to crawl this server now.")
-                        self.url_stack_same_server = []
-                    
-                    # the server seems to be too slow, give more time
-                    self.timeout_in_seconds += 1
-
-                    # Need to try again.
-                    self.url_stack_same_server.append(next_url)
-
-                except requests.exceptions.RequestException as e:
-                    print(f"An error occurred: {e}")
+                if len(self.preliminary_index) >= batch:
+                    self.pre_to_Index()
 
         self.pre_to_Index()
+        self.timeout_in_seconds = self.timeout_default
 
     def search(self, input_string):
         """
@@ -297,16 +279,99 @@ class Crawler:
                     total_hits = results.estimated_length()
 
                     if total_hits > 0:
-                        return corrected.string, total_hits, [(r["title"], r["url"], r.highlights("content")) for r in results]
+                        return corrected.string, total_hits, self.convert_results(results)
                     else:
                         return corrected.string, 0, []
 
             # use highlightes to have text around the results. but content is not stored
             # taking too much space if 
             if total_hits > 0:
-                return "", total_hits, [(r["title"], r["url"], r.highlights("content")) for r in results]
+                return "", total_hits, self.convert_results(results)
             else:
                 return "",0,[]
+    
+    def get_page(self,url):
+        """
+        retrieves a webpage given an url
+
+        Args: 
+            url (str): The url to retrieve from
+
+        Returns:
+            code (int): 1 for successful, 0 for was not html or not ok, -1 for server is too slow
+            soup (bs4.BeautifulSoup): The content of the webpage if code = 1
+        """
+        try:
+            response = requests.get(url, timeout=self.timeout_in_seconds, headers=self.custom_headers)
+
+            print("\n",response.status_code, url)
+            
+            # if no error message and it is an html response
+            if response.ok and "text/html" in response.headers["content-type"]:
+
+                # analyse it and update index
+                soup = BeautifulSoup(response.content, 'html.parser') 
+                return 1, soup
+            return 0, None
+            
+        except requests.exceptions.Timeout:
+
+            if self.timeout_in_seconds > 20:
+                return -1, None
+            
+            # the server seems to be too slow, give more time
+            self.timeout_in_seconds += 1
+
+            # Need to try again.
+            time.sleep(self.timeout_in_seconds / 2)
+            return self.get_page(url)
+
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
+
+    def convert_results(self,results):
+        """
+        converts the search results into a usable format. Also reretrieves the webpages to create highlights
+
+        Args:
+            results (whoosh.searching.Results): An object retrieved by doing a search in a whoosh index
+        
+        Returns:
+            output (list): A list containing sets for each hit [(title, url, highlights), ...]
+        """
+        output = []
+
+        for r in results:
+            code, soup = self.get_page(r["url"]) # this does take a little longer than using the stored information
+
+            if code == 1: # only use new info if the server is reachable
+                self.update_index(r["url"],soup)
+                output.append((r["title"], r["url"], r.highlights("content", text = soup.text )))
+
+        return output
+    
+    def update_index(self,url,new_soup):
+        """
+        delete old entry for url and save a new one given new content
+
+        Args: 
+            url (str): the entry with this url will be updated if it exists, else just added
+            new_soup (bs4.BeautifulSoup): content for the new entry
+        """
+        index = self.open_index()
+
+        # check if old entry exists
+        query = QueryParser("url", index.schema, group=qparser.OrGroup).parse(url)
+        with index.searcher() as searcher:
+            results = searcher.search(query)
+            if len(results)> 0:
+
+                # delete old entry
+                with index.writer() as writer:
+                    writer.delete_by_term("url", url)
+
+                # add new entry
+                self.add_to_Index(new_soup,url)
 
     def convert_time(self,time):
         """
