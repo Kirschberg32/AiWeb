@@ -240,7 +240,7 @@ class Crawler:
         self.pre_to_Index()
         self.timeout_in_seconds = self.timeout_default
 
-    def search(self, input_string):
+    def search(self, input_string, limit = 15, page = 1):
         """
         Searches in the index for a search term.
         It searches in the title and content and is a default OR search. It uses BM25F as a scoring algorithm. 
@@ -248,10 +248,14 @@ class Crawler:
 
         Args: 
             input_string (str): A string containing the search term
+            limit (int): How many results to return for each page
+            page (int>0): results for which page to load
 
         Returns:
-            value (str): A string containing the corrected search term if it was corrected and results were found 
             total_hits (int): The estimated number of total hits
+            pagecount (int): How many pages exist
+            pagenum (int): Which page this is
+            is_last_page (bool): whether this is the last page
             results (list): A list containing sets for each hit [(title, url, highlights), ...]
         """
 
@@ -266,29 +270,36 @@ class Crawler:
         with index.searcher(weighting = scoring.BM25F()) as searcher:
 
             # find entries with all words in the content!!!
-            results = searcher.search(query, limit = None) # search_page(query,1,pagelen=10)
+            p = searcher.search_page(query,page,limit) # search_page(query,1,pagelen=10)
 
             # have to extract all important information here before searcher is closed
-            total_hits = results.estimated_length()
-
-            if total_hits == 0:
-                # try to correct the user input
-                corrected = searcher.correct_query(query, input_string)
-                if corrected.query != query:
-                    results = searcher.search(corrected.query)
-                    total_hits = results.estimated_length()
-
-                    if total_hits > 0:
-                        return corrected.string, total_hits, self.convert_results(results)
-                    else:
-                        return corrected.string, 0, []
+            #total_hits = resultspage.total
 
             # use highlightes to have text around the results. but content is not stored
             # taking too much space if 
-            if total_hits > 0:
-                return "", total_hits, self.convert_results(results)
-            else:
-                return "",0,[]
+            return p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
+
+    def correct_string(self,input_string):
+        """
+        Checks if a search_input can be corrected
+
+        Args:
+            input_string (str): The string to correct
+
+        Returns:
+            corrected.string (str): The corrected input
+        """
+
+        index = self.open_index()
+
+        query = MultifieldParser(["title", "content"], index.schema, group=qparser.OrGroup).parse(input_string)
+
+        with index.searcher() as searcher:
+            corrected = searcher.correct_query(query, input_string)
+            if corrected.query != query: # if query changed
+                return corrected.string
+            
+        return ""
     
     def get_page(self,url):
         """

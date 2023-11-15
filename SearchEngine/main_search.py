@@ -13,8 +13,16 @@ def main():
     # choose a search line
     search_line = "The Platypus ANDNOT Australia"
 
+    corrected = mycrawler.correct_string(search_line)
+    if corrected:
+        print("Results for: ", corrected)
+        search_line = corrected
+
     # search
-    value, total_hits, results = mycrawler.search(search_line)
+    # total_hits, total_pages, pagenumber, last_page, results = mycrawler.search(search_line)
+    results = mycrawler.search(search_line)
+    print(results)
+"""
 
     # if no results for search line but correctable
     if value: 
@@ -23,6 +31,7 @@ def main():
         myfunctions.print_results(value, total_hits,results)
     else: # if normal result
         myfunctions.print_results(search_line, total_hits,results)
+"""
 
 if __name__ == "__main__":
     main()
