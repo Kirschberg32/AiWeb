@@ -266,7 +266,7 @@ class Crawler:
         with index.searcher(weighting = scoring.BM25F()) as searcher:
 
             # find entries with all words in the content!!!
-            results = searcher.search(query) # search_page(query,1,pagelen=10)
+            results = searcher.search(query, limit = None) # search_page(query,1,pagelen=10)
 
             # have to extract all important information here before searcher is closed
             total_hits = results.estimated_length()
