@@ -1,0 +1,29 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+            
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    background-color: #AC0634;
+    color: white;
+}
+
+section#name {              
+    text-align: center;
+    font-size: 40px;
+}
+
+section#searchBar {
+    text-align: center;
+    padding: 0px;
+}
+
+section#matches {
+    text-align: left;
+    font-size: 16px;
+}

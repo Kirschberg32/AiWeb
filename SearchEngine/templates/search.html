@@ -1,21 +1,74 @@
 <!DOCTYPE html>
 <html>
-    <header>
-        <title>Search Engine</title>
-    </header>
+    <head>
+        
+        <title>Gugle-Search Engine</title>
+        <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+        <link rel="stylesheet" href="/static/mystyle.css"
+       
+    </head>
+
     <body>
-        <form action='search'method='get'>
-            <label for="field">Search:</label>
-            <input type='search' id="field" name='q' value = {{req}} ></input>
-            <input type="submit" value="Submit"></input>
-        </form>
-        <h1>
-            {{match}}
-        </h1>
-        <ul>
-            {% for item in result %}
-            <li><a href={{item}}>{{item}}</li>
-            {% endfor %}
-        </ul>
+
+        <section id="name">
+            <b>
+                <font color="#e81416">G</font>
+                <font color="#ffa500">U</font>
+                <font color="#faeb36">G</font>
+                <font color="#79c314">E</font>
+                <font color="#487de7">L</font>
+            </b>
+        </section>
+        
+        <!--The Search Bar and Button-->
+        <section id="searchBar">
+            <form action='search'method='get'>
+                <label for="field"><font size="+2">Search:</font></label>
+                <input type='search' id="field" name='q' value = {{req}} ></input>
+                <input type="submit" value="Submit"></input>
+            </form>         
+        </section>
+
+        <section id="matches">
+            <!--Shows amount of matches-->
+            <div style="padding-left: 20px;"> <!-- Offset looks better in this line -->
+                <h2>{{ match }}</h2>
+            </div>
+            <hr width="100%" />
+            <div style="height:640px;overflow:auto"> <!--Adds a Scollbar and defines a height for the matches-->
+                <table>
+                    <ul id="container">
+                        <!--Loops through the results and shows-->
+                        {% for i,j,k in result %}
+                        <li><a href={{j}}><b><font size="+2">{{i}}</font></b></a></li>                        
+                        <p>{{k|safe}}</p>
+                        <font size="-2"><a href={{j}}>{{j}}</a></font><br /><br />
+                        {% endfor %}
+                    </ul>
+                    <!-- Button to load more matches -->
+                    {% if all_matches|length > 15 %}
+                        <form action="/load_more/{{ offset }}-{{ offset+15 }}" method="post">
+                            <input type="hidden" name="offset" value="15">
+                            <input type="submit" value="Load More">
+                        </form>
+                        <form action="/load_more/{{ offset-15 }}-{{ offset }}" method="post">
+                            <input type="hidden" name="offset" value="-15">
+                            <input type="submit" value="Go Back">
+                    </form>
+                    {% endif %}
+                </table>
+            </div>
+            <hr width="100%" />
+            
+        </section>        
+            
+        <footer>
+            <p>Created for the course Artificial Intelligence and the Web</p>
+            <p>Author: Eosandra Grund, Fabian Kirsch</p>
+            <p><a href="mailto:egrund@uos.de">egrund@uos.de</a></p>
+            <p><a href="mailto:fkirsch@uos.de">fkirsch@uos.de</a></p>
+        </footer>        
+    
     </body>
+     
 </html>
