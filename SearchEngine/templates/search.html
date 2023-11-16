@@ -2,7 +2,7 @@
 <html>
     <head>
         
-        <title>Gugle-Search Engine</title>
+        <title>Gugel-Search Engine</title>
         <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
         <link rel="stylesheet" href="/static/mystyle.css"
        
@@ -22,7 +22,7 @@
         
         <!--The Search Bar and Button-->
         <section id="searchBar">
-            <form action='search'method='get'>
+            <form action="{{ url_for('search') }}" method='get'>
                 <label for="field"><font size="+2">Search:</font></label>
                 <input type='search' id="field" name='q' value = {{req}} ></input>
                 <input type="submit" value="Submit"></input>
@@ -35,26 +35,30 @@
                 <h2>{{ match }}</h2>
             </div>
             <hr width="100%" />
-            <div style="height:640px;overflow:auto"> <!--Adds a Scollbar and defines a height for the matches-->
+            <div overflow:auto"> <!--Adds a Scollbar and defines a height for the matches-->
                 <table>
                     <ul id="container">
                         <!--Loops through the results and shows-->
-                        {% for i,j,k in result %}
+                        {% for i,j,k in result[num - 1] %}
                         <li><a href={{j}}><b><font size="+2">{{i}}</font></b></a></li>                        
                         <p>{{k|safe}}</p>
                         <font size="-2"><a href={{j}}>{{j}}</a></font><br /><br />
                         {% endfor %}
                     </ul>
                     <!-- Button to load more matches -->
-                    {% if all_matches|length > 15 %}
-                        <form action="/load_more/{{ offset }}-{{ offset+15 }}" method="post">
-                            <input type="hidden" name="offset" value="15">
-                            <input type="submit" value="Load More">
-                        </form>
-                        <form action="/load_more/{{ offset-15 }}-{{ offset }}" method="post">
-                            <input type="hidden" name="offset" value="-15">
-                            <input type="submit" value="Go Back">
-                    </form>
+                    {% if pagecount > 1 or result|length >= num %}
+                        <!-- Lower Bound -->
+                        {% if num > 1 %}
+                            <form action="{{ url_for('load_more', num=num - 1) }}" method="post">
+                                <input type="submit" value="Go Back">
+                            </form>
+                        {% endif %}
+                        <!-- Upper Bound -->
+                        {% if num < pagecount %}
+                            <form action="{{ url_for('load_more', num=num + 1) }}" method="post">
+                                <input type="submit" value="Load More">
+                            </form>
+                        {% endif %}
                     {% endif %}
                 </table>
             </div>
@@ -65,8 +69,7 @@
         <footer>
             <p>Created for the course Artificial Intelligence and the Web</p>
             <p>Author: Eosandra Grund, Fabian Kirsch</p>
-            <p><a href="mailto:egrund@uos.de">egrund@uos.de</a></p>
-            <p><a href="mailto:fkirsch@uos.de">fkirsch@uos.de</a></p>
+            <p>EMail: <a href="mailto:egrund@uos.de">egrund@uos.de</a>, <a href="mailto:fkirsch@uos.de">fkirsch@uos.de</a></p>
         </footer>        
     
     </body>
