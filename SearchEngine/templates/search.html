@@ -3,8 +3,9 @@
     <head>
         
         <title>Gugel-Search Engine</title>
-        <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
-        <link rel="stylesheet" href="/static/mystyle.css"
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='mystyle.css') }}">
+
        
     </head>
 
@@ -41,9 +42,9 @@
                     <ul id="container">
                         <!--Loops through the results and shows-->
                         {% for i,j,k in result[num - 1] %}
-                            <li style="font-size: 3vh;"><a href="{{j}}"><b><font style="font-size: 3vh;">{{i}}</font></b></a></li><br />                       
-                            <font style="font-size: 2vh;">{{k|safe}}</font><br />
-                            <font style="font-size: 1vh;"><a href="{{j}}">{{j}}</a></font><br /><br />
+                            <li style="font-size: 3vh;"><a href="{{j}}"><b><font style="font-size: 3vh;">{{i}}</font></b></a></li><br />
+                            <font style="font-size: 1vh;"><a href="{{j}}">{{j}}</a></font><br />
+                            <font style="font-size: 2vh;">{{k|safe}}</font><br /><br />
                         {% endfor %}
                     </ul>
                     <!-- Button to load more matches -->
