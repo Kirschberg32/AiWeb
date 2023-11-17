@@ -9,6 +9,7 @@ app = Flask(__name__, static_url_path='/static')
 
 #main_create.main()
 
+
 # choose a website to use
 v = website_dicts.vm009
 # create crawler

@@ -23,26 +23,27 @@
         <!--The Search Bar and Button-->
         <section id="searchBar">
             <form action="{{ url_for('search') }}" method='get'>
-                <label for="field"><font size="+2">Search:</font></label>
+                <label for="field">Search:</label>
                 <input type='search' id="field" name='q' value = {{req}} ></input>
                 <input type="submit" value="Submit"></input>
             </form>         
         </section>
 
+        <!--Shows amount of matches-->
+        <div style="padding-left: 2vh; font-size: 3vh; font-weight: bold;"> <!-- Offset looks better in this line -->
+            {{ match }}
+        </div>
+        
+        <hr />
+        
         <section id="matches">
-            <!--Shows amount of matches-->
-            <div style="padding-left: 20px;"> <!-- Offset looks better in this line -->
-                <h2>{{ match }}</h2>
-            </div>
-            <hr width="100%" />
-            <div overflow:auto"> <!--Adds a Scollbar and defines a height for the matches-->
                 <table>
                     <ul id="container">
                         <!--Loops through the results and shows-->
                         {% for i,j,k in result[num - 1] %}
-                        <li><a href={{j}}><b><font size="+2">{{i}}</font></b></a></li>                        
-                        <p>{{k|safe}}</p>
-                        <font size="-2"><a href={{j}}>{{j}}</a></font><br /><br />
+                            <li style="font-size: 3vh;"><a href="{{j}}"><b><font style="font-size: 3vh;">{{i}}</font></b></a></li><br />                       
+                            <font style="font-size: 2vh;">{{k|safe}}</font><br />
+                            <font style="font-size: 1vh;"><a href="{{j}}">{{j}}</a></font><br /><br />
                         {% endfor %}
                     </ul>
                     <!-- Button to load more matches -->
@@ -54,18 +55,17 @@
                             </form>
                         {% endif %}
                         <!-- Upper Bound -->
-                        {% if num < pagecount %}
+                        {% if num < pagecount or num < result|length %}
                             <form action="{{ url_for('load_more', num=num + 1) }}" method="post">
                                 <input type="submit" value="Load More">
                             </form>
                         {% endif %}
                     {% endif %}
-                </table>
-            </div>
-            <hr width="100%" />
-            
-        </section>        
-            
+                </table>                       
+        </section> 
+        
+        <hr />   
+        
         <footer>
             <p>Created for the course Artificial Intelligence and the Web</p>
             <p>Author: Eosandra Grund, Fabian Kirsch</p>
