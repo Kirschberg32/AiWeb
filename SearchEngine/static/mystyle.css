@@ -14,6 +14,7 @@ footer {
     background-color: #AC0634;
     color: white;
     z-index: -1;
+    font-size: 2vh;
 }
 footer p {
     text-align: right;
@@ -30,7 +31,7 @@ section#searchBar {
     font-size: 2vh; 
     text-align: center;
     padding: 0px;   
-    width: 60vh;
+    width: 70vh;
     margin: 0 auto;
 }
 input[type='search'] {

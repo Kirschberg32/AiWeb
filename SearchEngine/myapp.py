@@ -4,6 +4,7 @@ from flask import Flask, request, render_template
 import main_create
 import myfunctions
 import website_dicts
+from urllib.parse import unquote
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -47,7 +48,7 @@ def search():
     else:
         match = "No matches found! Try again!"
 
-    return render_template("search.html", req = q, match = match, result = all_matches, pagecount = pagecount, num = current_page)
+    return render_template("search.html", req = q , match = match, result = all_matches, pagecount = pagecount, num = current_page)
 
 @app.route('/load_more/Page-<int:num>', methods=['POST'])
 def load_more(num):
@@ -60,7 +61,7 @@ def load_more(num):
         _, pagecount, _,last_page,result = mycrawler.search(q, page = num)
         all_matches.append(result)
     
-    return render_template('search.html', match = str(total) + " matches estimated!", result=all_matches, pagecount = pagecount, num = num)
+    return render_template('search.html', req = q,match = str(total) + " matches estimated!", result=all_matches, pagecount = pagecount, num = num)
     
 
     

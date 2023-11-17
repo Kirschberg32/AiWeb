@@ -24,7 +24,7 @@
         <section id="searchBar">
             <form action="{{ url_for('search') }}" method='get'>
                 <label for="field">Search:</label>
-                <input type='search' id="field" name='q' value = {{req}} ></input>
+                <input type='search' id="field" name='q' value = '{{req}}' ></input>
                 <input type="submit" value="Submit"></input>
             </form>         
         </section>
@@ -68,8 +68,7 @@
         
         <footer>
             <p>Created for the course Artificial Intelligence and the Web</p>
-            <p>Author: Eosandra Grund, Fabian Kirsch</p>
-            <p>EMail: <a href="mailto:egrund@uos.de">egrund@uos.de</a>, <a href="mailto:fkirsch@uos.de">fkirsch@uos.de</a></p>
+            <p>Author: Eosandra Grund(<a href="mailto:egrund@uos.de">egrund@uos.de</a>), Fabian Kirsch(<a href="mailto:fkirsch@uos.de">fkirsch@uos.de</a>)</p>
         </footer>        
     
     </body>
