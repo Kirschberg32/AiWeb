@@ -1,11 +1,14 @@
 """ Index using whoosh """
 
 import os
+import re
+from datetime import datetime, timedelta
 from concurrent import futures
 from whoosh.index import create_in, exists_in, open_dir
-from whoosh.fields import Schema, TEXT, ID
+from whoosh.fields import Schema, TEXT, ID, DATETIME
 from whoosh.qparser import MultifieldParser, QueryParser
 from whoosh import scoring, qparser
+from whoosh.writing import IndexingError
 
 from myfunctions import get_page
 
@@ -18,7 +21,7 @@ class Index:
         timeout_default (int): The default value for timeout before retrying the same server
     """
 
-    def __init__(self,index_path, name, timeout_default : int = 2):
+    def __init__(self,name, index_path, timeout_default : int = 2):
         """
         Args:
             index_path (str): A directory of where to save or load the whoosh index
@@ -46,7 +49,7 @@ class Index:
         # if there is no existing index create a new one
         if not exists_in(self.index_path):
             # stored content to do easy highlights
-            schema = Schema(title=TEXT(stored=True), content=TEXT(stored=True), url=ID(stored=True))
+            schema = Schema(title=TEXT(stored=True), content=TEXT, url=ID(stored=True), date=DATETIME(stored=True))
             index = create_in(self.index_path, schema)
         else:
             # open the existing index
@@ -63,8 +66,10 @@ class Index:
         """
 
         index = self.open_index()
+        date = datetime.utcnow()
+
         with index.writer() as writer:
-            writer.add_document(title=soup.title.text, content=soup.text, url=url)
+            writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date)
 
     def list_to_Index(self,input_list):
         """
@@ -76,11 +81,12 @@ class Index:
         """
 
         index = self.open_index()
+        date = datetime.utcnow()
 
         # automatically committed and closed writer
         with index.writer() as writer:
             for soup, url in input_list:
-                writer.add_document(title=soup.title.text, content=soup.text, url=url)
+                writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date)
 
         self.preliminary_index = []
 
@@ -92,20 +98,19 @@ class Index:
             url (str): the entry with this url will be updated if it exists, else just added
             new_soup (bs4.BeautifulSoup): content for the new entry
         """
+        # self.is_in_index(url,delete=True)
         index = self.open_index()
 
-        # check if old entry exists
-        query = QueryParser("url", index.schema, group=qparser.OrGroup).parse(url)
-        with index.searcher() as searcher:
-            results = searcher.search(query)
-            if len(results)> 0:
+        # delete old entry
+        try:
+            with index.writer() as writer:
+                writer.delete_by_term("url", url)
+        except IndexingError as e:
+            pass
+            # does not exists, so just add the new one
 
-                # delete old entry
-                with index.writer() as writer:
-                    writer.delete_by_term("url", url)
-
-                # add new entry
-                self.add_to_Index(new_soup,url)
+        # add new entry
+        self.add_to_Index(new_soup,url)
 
     def search(self, input_string, limit = 15, page = 1):
         """
@@ -145,6 +150,31 @@ class Index:
             # use highlightes to have text around the results. but content is not stored
             # taking too much space if 
             return p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
+        
+    def find_old(self, age_in_days : int = 30):
+        """
+        Finds old entries in the index, that are older than age_in_days days
+
+        Args:
+            age_in_days (int): Information that is older than that will be updated
+        """
+
+        # create input_string without using DateParserPlugin
+        threshold_date = str(datetime.utcnow() - timedelta(days=age_in_days)).split()[0]
+        input_string = f"date:[20000101 to {re.sub(r'[^0-9]', '', threshold_date)}]"
+
+        # find all pages that are older than x
+        # helpful: https://whoosh.readthedocs.io/en/latest/dates.html
+        index = self.open_index()
+        query = QueryParser("date", index.schema)
+
+        # query.add_plugin(DateParserPlugin)()
+        query = query.parse(input_string)
+
+        with index.searcher() as searcher:
+            results = searcher.search(query,limit=None) # do this in batches if working with more data using search_page
+
+            return [r["url"] for r in results]
         
     def convert_results(self,results):
         """
@@ -191,4 +221,31 @@ class Index:
                 return corrected.string
             
         return ""
+    
+    def is_in_index(self,url, delete = False):
+        """ 
+        checks whether there is an entry with url = url in the index
+
+        Args:
+            url (str): the url to look for
+            delete (bool): True -> delete entry if it is found in index
+
+        Returns:
+            value (bool): True if is in index, False if not; or if always is False and self.check_index is True value is False
+        """
+
+        index = self.open_index()
+
+        # check if old entry exists
+        query = QueryParser("url", index.schema, group=qparser.OrGroup).parse(url)
+        with index.searcher() as searcher:
+            results = searcher.search(query)
+            if len(results)> 0 and results[0]["url"]==url:
+                if delete:
+                    # delete old entry
+                    with index.writer() as writer:
+                        writer.delete_by_term("url", url)
+                return True
+        return False
+
     

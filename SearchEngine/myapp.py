@@ -4,18 +4,17 @@ from flask import Flask, request, render_template
 import main_create
 from index import Index
 import website_dicts
-from urllib.parse import unquote
+from daemon import MyDaemon
 
 app = Flask(__name__, static_url_path='/static')
 
 # to crawl
-#main_create.main()
-
+# main_create.main()
 
 # choose a website to use
 v = website_dicts.vm009
 # create index for searching
-index = Index(v["index_path"],v["custom_header_name"])
+index = Index(v["custom_header_name"],v["index_path"])
 
 pagecount = 0
 match = 0
@@ -24,6 +23,7 @@ last_page = False
 total = 0
 q = ""
 
+daemon = MyDaemon(v).start()
 
 @app.route("/")
 def start():

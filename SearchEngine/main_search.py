@@ -9,7 +9,7 @@ def main():
     #v = website_dicts.uos
 
     # create crawler
-    index = Index(v["index_path"],v["custom_header_name"])
+    index = Index(v["custom_header_name"],v["index_path"])
     
     # choose a search line
     search_line = "The Platypus ANDNOT Australia"

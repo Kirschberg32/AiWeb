@@ -41,7 +41,7 @@ class Crawler:
         self.timeout_default = timeout_default
         self.timeout_in_seconds = self.timeout_default
 
-        self.index = Index(index_path,name,self.timeout_default)
+        self.index = Index(name,index_path,self.timeout_default)
         self.preliminary_index = []
 
         # custom headers to indicate, that I am a crawler (politeness)
@@ -58,15 +58,14 @@ class Crawler:
     def append_same_server(self,url):
         """
         Appends a new url to the same server list. Please check beforehand if it really is the same server. 
-        It only checks whether the url already is in the list and whether it was already visited. Then it does not append it. 
+        It only checks whether the url already is in the list, whether it was already visited, or is in index or preliminary_index before appending it.
 
         Args:
             url (string): The url to append
         """
 
-        if (not url in self.url_stack_same_server) and (not url in self.urls_visited):
+        if (not url in self.url_stack_same_server) and (not url in self.urls_visited)and not self.is_in_preliminary(url) and not self.index.is_in_index(url):
             self.url_stack_same_server.append(url)
-
     
     def find_url(self,soup, original_url, original_url_parsed = None):
         """
@@ -121,12 +120,13 @@ class Crawler:
         
         while self.url_stack:
             # take next url to crawl next server
-            self.crawl(self.url_stack.pop(0))
+            self.crawl(self.url_stack.pop(-1))
             self.timeout_in_seconds = self.timeout_default
 
     def crawl(self, start_url, batch = 20):
         """
-        crawls all websites that can be reached from a start_url
+        crawls all websites that can be reached from a start_url on the same server. 
+        This is done so the list of webpages to go does not become too long. 
 
         Args:
             start_url (str): a string containing an url
@@ -144,7 +144,7 @@ class Crawler:
         while self.url_stack_same_server:
 
             # take and remove first url from list
-            next_url = self.url_stack_same_server.pop(0)
+            next_url = self.url_stack_same_server.pop(-1)
 
             # print information
             len_visited = len(self.urls_visited)
@@ -157,34 +157,73 @@ class Crawler:
             print(f"Estimated time left for {len_togo} pages: {self.convert_time(time_estimation)}")
 
             # if not visited recently
-            if next_url not in self.urls_visited:
+            #if next_url not in self.urls_visited and not self.index.is_in_index(next_url) and not self.is_in_preliminary(next_url):
 
-                # to not overwhelm the server wait before request again (politeness)
-                time.sleep(self.timeout_in_seconds / 2)
+            # to not overwhelm the server wait before request again (politeness)
+            time.sleep(self.timeout_in_seconds / 2)
 
-                # get page
-                code, soup = get_page((next_url,self.timeout_in_seconds,self.custom_headers))
+            # get page
+            code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers)
 
-                if code == -1: # if the server is too slow
-                    print("The server of: ", next_url, " is too slowly.")
-                    print("The crawler will stop to crawl this server now.")
-                    self.url_stack_same_server = []
-                elif code ==1: # if 0 then the returns where not html or not ok code
-                    # update index
-                    self.preliminary_index.append((soup,next_url))
-                    
-                    # finds all urls and saves the ones we want to visit in the future
-                    self.find_url(soup,next_url,urlparse(next_url))
-
+            if code == -1: # if the server is too slow
+                print("The server of: ", next_url, " is too slowly.")
+                print("The crawler will stop to crawl this server now.")
+                self.url_stack_same_server = []
+            elif code ==1: # if 0 then the returns where not html or not ok code
+                # update index
+                self.preliminary_index.append((soup,next_url))
+                
+                # finds all urls and saves the ones we want to visit in the future
+                self.find_url(soup,next_url,urlparse(next_url))
+            else:
                 # update visited list
-                # add also errors and not html so they are not visited again. 
+                # add errors and not html so they are not visited again. 
                 self.urls_visited.append(next_url)
 
-                if len(self.preliminary_index) >= batch:
-                    self.index.list_to_Index(self.preliminary_index)
+            if len(self.preliminary_index) >= batch:
+                self.index.list_to_Index(self.preliminary_index)
+                self.preliminary_index = []
 
         self.index.list_to_Index(self.preliminary_index)
+        self.preliminary_index = []
         self.timeout_in_seconds = self.timeout_default
+
+    def crawl_updates(self, age_in_days : int = 30):
+        """
+        crawls pages again to get new information to make the index up to date
+        https://docs.python.org/3/library/threading.html#rlock-objects
+
+        Args:
+            age_in_days (int): Information that is older than that will be updated
+        """
+
+        urls_to_update = self.index.find_old(age_in_days)
+
+        # TODO
+        # which order
+        # how to reuse methods I already have
+        # lock to make sure searching and updating do not collide
+        # Welche listen mit URLs aus dem RAM wollen wir noch auf der Festplatte speichern?
+
+
+
+
+
+    def is_in_preliminary(self,url):
+        """
+        checks whether there is a tuple with url in self.preliminary_index
+
+        Args:
+            url (str): The url to search for
+
+        Returns:
+            value (bool): True if url is in self.preliminary_index else False
+        """
+
+        for _, url2 in self.preliminary_index:
+            if url == url2:
+                return True
+        return False
 
     def convert_time(self,time):
         """
