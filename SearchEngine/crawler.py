@@ -353,6 +353,7 @@ class Crawler:
         """
         output = []
 
+        # ask for new content parallel for all results
         with futures.ThreadPoolExecutor(max_workers=15) as executor:
             res = executor.map(self.get_page,[r["url"] for r in results])
         responses_new = list(res)
@@ -360,7 +361,6 @@ class Crawler:
         for r,code_soup in zip(results,responses_new):
 
             if code_soup[0] == 1: # only use new info if the server is reachable
-                self.update_index(r["url"],code_soup[1])
                 output.append((r["title"], r["url"], r.highlights("content", text = code_soup[1].text )))
 
         return output

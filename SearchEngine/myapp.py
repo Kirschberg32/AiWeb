@@ -38,6 +38,7 @@ def search():
 
     all_matches = []
     q = request.args.get('q')
+
     total, pagecount, current_page,last_page, result = mycrawler.search(q) #p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
     all_matches.append(result)
     #print("\n\nresult:\n",all_matches)
@@ -46,7 +47,13 @@ def search():
     if result:
         match = str(total) + " matches estimated!"
     else:
-        match = "No matches found! Try again!"
+        match = "No matches found!"
+        current_page = 1 # needed so html for "load_more" button works
+
+    # try to correct the string, and suggest the correction if there is one
+    corrected_q = mycrawler.correct_string(q)
+    if corrected_q:
+        match += f" Do you mean {corrected_q}?" # start Search for corrected_q when clicking on it
 
     return render_template("search.html", req = q , match = match, result = all_matches, pagecount = pagecount, num = current_page)
 

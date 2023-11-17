@@ -50,7 +50,7 @@ input[type='submit'] {
 section#matches {
     font-size: 2vh;
     text-align: left;
-    height: 60vh;
+    height: 70vh;
     overflow: auto;
 }
 
