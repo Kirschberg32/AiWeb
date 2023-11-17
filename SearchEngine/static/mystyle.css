@@ -50,9 +50,18 @@ input[type='submit'] {
 section#matches {
     font-size: 2vh;
     text-align: left;
-    height: 70vh;
+    height: 65vh;
     overflow: auto;
 }
+ul#match {
+    color: black;
+    background-color: #f8edfc;
+    border: 0.3vh solid #000;
+    margin-bottom: 0.5vh; 
+    width: 90vh;
+}
+    
+    
 
 hr {
     height: 0.3vh;

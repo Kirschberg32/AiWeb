@@ -12,6 +12,7 @@
     <body>
 
         <section id="name">
+            <!--The name of our searchEngine nicely presented-->
             <b>
                 <font color="#e81416">G</font>
                 <font color="#ffa500">U</font>
@@ -32,7 +33,7 @@
 
         <!--Shows amount of matches-->
         <div style="padding-left: 2vh; font-size: 3vh; font-weight: bold;"> <!-- Offset looks better in this line -->
-            {{ match }}
+            {{ match }}{% if req_corrected %} Do you mean <a href="{{ url_for('search', q=req_corrected) }}">{{req_corrected}}</a>?{% endif %}
         </div>
         
         <hr />
@@ -42,9 +43,17 @@
                     <ul id="container">
                         <!--Loops through the results and shows-->
                         {% for i,j,k in result[num - 1] %}
-                            <li style="font-size: 3vh;"><a href="{{j}}"><b><font style="font-size: 3vh;">{{i}}</font></b></a></li><br />
-                            <font style="font-size: 1vh;"><a href="{{j}}">{{j}}</a></font><br />
-                            <font style="font-size: 2vh;">{{k|safe}}</font><br /><br />
+                            <a href="{{j}}" style="text-decoration: none;">
+                                <ul id="match">
+                                    <!-- Log for the Website, if we want to add this, we need the url to the logo itself -->
+                                    <!--<img src="We need to enter the url here" alt="Website Logo" width="50" height="50">-->
+                                    
+                                    <!-- Titel,Url and highlighted content -->
+                                    <b><font style="font-size: 3vh;">{{i}}</font></b><br />
+                                    <u><font style="font-size: 1vh;">{{j}}</font></u><br />                                                        
+                                    <font style="font-size: 2vh;">{{k|safe}}</font><br /><br />
+                                </ul>
+                            </a>  
                         {% endfor %}
                     </ul>
                     <!-- Button to load more matches -->

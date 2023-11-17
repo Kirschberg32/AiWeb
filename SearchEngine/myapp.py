@@ -9,7 +9,7 @@ from daemon import MyDaemon
 app = Flask(__name__, static_url_path='/static')
 
 # to crawl
-# main_create.main()
+#main_create.main()
 
 # choose a website to use
 v = website_dicts.vm009
@@ -54,10 +54,8 @@ def search():
 
     # try to correct the string, and suggest the correction if there is one
     corrected_q = index.correct_string(q)
-    if corrected_q:
-        match += f" Do you mean {corrected_q}?" # start Search for corrected_q when clicking on it
 
-    return render_template("search.html", req = q , match = match, result = all_matches, pagecount = pagecount, num = current_page)
+    return render_template("search.html", req = q, req_corrected = corrected_q, match = match, result = all_matches, pagecount = pagecount, num = current_page)
 
 @app.route('/load_more/Page-<int:num>', methods=['POST'])
 def load_more(num):
