@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import time
 import os
+from concurrent import futures
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import MultifieldParser, QueryParser
@@ -352,12 +353,15 @@ class Crawler:
         """
         output = []
 
-        for r in results:
-            code, soup = self.get_page(r["url"]) # this does take a little longer than using the stored information
+        with futures.ThreadPoolExecutor(max_workers=15) as executor:
+            res = executor.map(self.get_page,[r["url"] for r in results])
+        responses_new = list(res)
 
-            if code == 1: # only use new info if the server is reachable
-                self.update_index(r["url"],soup)
-                output.append((r["title"], r["url"], r.highlights("content", text = soup.text )))
+        for r,code_soup in zip(results,responses_new):
+
+            if code_soup[0] == 1: # only use new info if the server is reachable
+                self.update_index(r["url"],code_soup[1])
+                output.append((r["title"], r["url"], r.highlights("content", text = code_soup[1].text )))
 
         return output
     
