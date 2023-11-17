@@ -1,5 +1,6 @@
 import myfunctions
 import website_dicts
+from index import Index
 
 def main():
 
@@ -8,19 +9,19 @@ def main():
     #v = website_dicts.uos
 
     # create crawler
-    mycrawler = myfunctions.create_crawler(v["custom_header_name"],v["index_path"])
+    index = Index(v["index_path"],v["custom_header_name"])
     
     # choose a search line
     search_line = "The Platypus ANDNOT Australia"
 
-    corrected = mycrawler.correct_string(search_line)
+    corrected = index.correct_string(search_line)
     if corrected:
         print("Results for: ", corrected)
         search_line = corrected
 
     # search
     # total_hits, total_pages, pagenumber, last_page, results = mycrawler.search(search_line)
-    results = mycrawler.search(search_line)
+    results = index.search(search_line)
     print(results)
 """
 

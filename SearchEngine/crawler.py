@@ -1,14 +1,9 @@
 """ A crawler build for a simple search engine"""
-import requests
-from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import time
-import os
-from concurrent import futures
-from whoosh.index import create_in, exists_in, open_dir
-from whoosh.fields import Schema, TEXT, ID
-from whoosh.qparser import MultifieldParser, QueryParser
-from whoosh import scoring, qparser
+
+from myfunctions import get_page
+from index import Index
 
 class Crawler:
     """
@@ -19,7 +14,6 @@ class Crawler:
         url_stack (list): a list of all urls found on different servers we want to visit (stays empty after the start_url is removed at the 
             moment because we only want to crawl one server)
         urls_visited (list): a list with all the urls that where visited already by this crawler object
-        index_path (str): A directory of where to save or load the whoosh index
         preliminary_index (list): A temporary database for index information before saving it in the whoosh index. Each element has the structure (soup (bs4.BeautifulSoup), url (string))
         custom_headers (dict): Used as the header for requests
         timeout_default (int): The default value for timeout to reset timeout when switching to crawl a different server
@@ -28,13 +22,13 @@ class Crawler:
         scheme_list (list): A list containing all the url schemes we want to visit
     """
 
-    def __init__(self, name, index_path : str, start_url : str = ""):
+    def __init__(self, name, index_path : str, start_url : str = "",timeout_default : int = 2):
         """
 
         Args: 
-            name (str): The name used for custom_headers, 
-            index_path (str): A directory of where to save or load the whoosh index
+            name (str): The name used for custom_headers
             start_url (str): The url to start crawling from, if "" you have to give it to crawl() as an argument before you can start crawling
+            timeout_default (int): The default value for timeout to reset timeout when switching to crawl a different server
         """
 
         self.url_stack_same_server = []
@@ -44,71 +38,22 @@ class Crawler:
             self.url_stack = []
         self.urls_visited = []
 
-        self.index_path = index_path
+        self.timeout_default = timeout_default
+        self.timeout_in_seconds = self.timeout_default
+
+        self.index = Index(index_path,name,self.timeout_default)
         self.preliminary_index = []
 
         # custom headers to indicate, that I am a crawler (politeness)
-        self.custom_headers = {'User-Agent': name}
-
-        self.timeout_default = 2
-        self.timeout_in_seconds = self.timeout_default
+        self.custom_headers = {'User-Agent': "CrawlerforSearchEnginge/" + name}
 
         self.scheme_list = ["https", "http"] # requests only works with these
-
-    def open_index(self):
-        """
-        Opens or creates the index of this crawler
-
-        returns:
-            index (whoosh.index.Index): The index to use for creating writer and searcher
-        """
-        # create folders if they do not exist
-        if not os.path.isdir(self.index_path):
-            os.makedirs(self.index_path)
-
-        # if there is no existing index create a new one
-        if not exists_in(self.index_path):
-            # stored content to do easy highlights
-            schema = Schema(title=TEXT(stored=True), content=TEXT(stored=True), url=ID(stored=True))
-            index = create_in(self.index_path, schema)
-        else:
-            # open the existing index
-            index = open_dir(self.index_path)
-        return index
-    
-    def add_to_Index(self,soup,url):
-        """
-        Adds one single element to the whoosh index
-
-        Args: 
-            soup (bs4.BeautifulSoup): The object containing the information about the webpage
-            url (string): The url where the data of the soup was found
-        """
-
-        index = self.open_index()
-        with index.writer() as writer:
-            writer.add_document(title=soup.title.text, content=soup.text, url=url)
-
-    def pre_to_Index(self):
-        """
-        Adds all elements in self.preliminary_index to the whoosh index with title, text and url
-        the preliminary_index will be emptied afterwards
-        """
-
-        index = self.open_index()
-
-        # automatically committed and closed writer
-        with index.writer() as writer:
-            for soup, url in self.preliminary_index:
-                writer.add_document(title=soup.title.text, content=soup.text, url=url)
-
-        self.preliminary_index = []
 
     def __del__(self):
         """
         Should 
         """
-        self.pre_to_Index()
+        self.index.list_to_Index(self.preliminary_index)
 
     def append_same_server(self,url):
         """
@@ -218,7 +163,7 @@ class Crawler:
                 time.sleep(self.timeout_in_seconds / 2)
 
                 # get page
-                code, soup = self.get_page(next_url)
+                code, soup = get_page((next_url,self.timeout_in_seconds,self.custom_headers))
 
                 if code == -1: # if the server is too slow
                     print("The server of: ", next_url, " is too slowly.")
@@ -236,157 +181,10 @@ class Crawler:
                 self.urls_visited.append(next_url)
 
                 if len(self.preliminary_index) >= batch:
-                    self.pre_to_Index()
+                    self.index.list_to_Index(self.preliminary_index)
 
-        self.pre_to_Index()
+        self.index.list_to_Index(self.preliminary_index)
         self.timeout_in_seconds = self.timeout_default
-
-    def search(self, input_string, limit = 15, page = 1):
-        """
-        Searches in the index for a search term.
-        It searches in the title and content and is a default OR search. It uses BM25F as a scoring algorithm. 
-        If there are no matches the input_string will be corrected. Then it will be searched again. 
-
-        Args: 
-            input_string (str): A string containing the search term
-            limit (int): How many results to return for each page
-            page (int>0): results for which page to load
-
-        Returns:
-            total_hits (int): The estimated number of total hits
-            pagecount (int): How many pages exist
-            pagenum (int): Which page this is
-            is_last_page (bool): whether this is the last page
-            results (list): A list containing sets for each hit [(title, url, highlights), ...]
-        """
-
-        # helpful: https://whoosh.readthedocs.io/en/latest/searching.html
-
-        index = self.open_index()
-
-        # use MultifieldParser to search in different fields at once. 
-        query = MultifieldParser(["title", "content"], index.schema, group=qparser.OrGroup).parse(input_string)
-
-        # scoring BM25F takes frequency in a document in the whole index as well as length of documents into account
-        with index.searcher(weighting = scoring.BM25F()) as searcher:
-
-            # find entries with all words in the content!!!
-            p = searcher.search_page(query,page,limit) # search_page(query,1,pagelen=10)
-
-            # have to extract all important information here before searcher is closed
-            #total_hits = resultspage.total
-
-            # use highlightes to have text around the results. but content is not stored
-            # taking too much space if 
-            return p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
-
-    def correct_string(self,input_string):
-        """
-        Checks if a search_input can be corrected
-
-        Args:
-            input_string (str): The string to correct
-
-        Returns:
-            corrected.string (str): The corrected input
-        """
-
-        index = self.open_index()
-
-        query = MultifieldParser(["title", "content"], index.schema, group=qparser.OrGroup).parse(input_string)
-
-        with index.searcher() as searcher:
-            corrected = searcher.correct_query(query, input_string)
-            if corrected.query != query: # if query changed
-                return corrected.string
-            
-        return ""
-    
-    def get_page(self,url):
-        """
-        retrieves a webpage given an url
-
-        Args: 
-            url (str): The url to retrieve from
-
-        Returns:
-            code (int): 1 for successful, 0 for was not html or not ok, -1 for server is too slow
-            soup (bs4.BeautifulSoup): The content of the webpage if code = 1
-        """
-        try:
-            response = requests.get(url, timeout=self.timeout_in_seconds, headers=self.custom_headers)
-
-            print("\n",response.status_code, url)
-            
-            # if no error message and it is an html response
-            if response.ok and "text/html" in response.headers["content-type"]:
-
-                # analyse it and update index
-                soup = BeautifulSoup(response.content, 'html.parser') 
-                return 1, soup
-            return 0, None
-            
-        except requests.exceptions.Timeout:
-
-            if self.timeout_in_seconds > 20:
-                return -1, None
-            
-            # the server seems to be too slow, give more time
-            self.timeout_in_seconds += 1
-
-            # Need to try again.
-            time.sleep(self.timeout_in_seconds / 2)
-            return self.get_page(url)
-
-        except requests.exceptions.RequestException as e:
-            print(f"An error occurred: {e}")
-
-    def convert_results(self,results):
-        """
-        converts the search results into a usable format. Also reretrieves the webpages to create highlights
-
-        Args:
-            results (whoosh.searching.Results): An object retrieved by doing a search in a whoosh index
-        
-        Returns:
-            output (list): A list containing sets for each hit [(title, url, highlights), ...]
-        """
-        output = []
-
-        # ask for new content parallel for all results
-        with futures.ThreadPoolExecutor(max_workers=15) as executor:
-            res = executor.map(self.get_page,[r["url"] for r in results])
-        responses_new = list(res)
-
-        for r,code_soup in zip(results,responses_new):
-
-            if code_soup[0] == 1: # only use new info if the server is reachable
-                output.append((r["title"], r["url"], r.highlights("content", text = code_soup[1].text )))
-
-        return output
-    
-    def update_index(self,url,new_soup):
-        """
-        delete old entry for url and save a new one given new content
-
-        Args: 
-            url (str): the entry with this url will be updated if it exists, else just added
-            new_soup (bs4.BeautifulSoup): content for the new entry
-        """
-        index = self.open_index()
-
-        # check if old entry exists
-        query = QueryParser("url", index.schema, group=qparser.OrGroup).parse(url)
-        with index.searcher() as searcher:
-            results = searcher.search(query)
-            if len(results)> 0:
-
-                # delete old entry
-                with index.writer() as writer:
-                    writer.delete_by_term("url", url)
-
-                # add new entry
-                self.add_to_Index(new_soup,url)
 
     def convert_time(self,time):
         """

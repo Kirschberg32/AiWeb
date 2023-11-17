@@ -1,5 +1,5 @@
-import myfunctions
 import website_dicts
+import crawler
 
 def main():
 
@@ -8,7 +8,8 @@ def main():
     #v = website_dicts.uos
 
     # create new crawler and let is crawl
-    myfunctions.create_and_crawl(v["custom_header_name"],v["index_path"], v["start_url"])
+    mycrawler = crawler.Crawler(v["custom_header_name"], v["index_path"])
+    mycrawler.crawl(v["start_url"])
 
 if __name__ == "__main__":
     main()

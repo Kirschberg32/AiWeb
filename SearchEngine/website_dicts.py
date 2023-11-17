@@ -1,4 +1,6 @@
-custom_header_default_name = "CrawlerForSearchEngine/2.0 (myemail@uos.de)"
+custom_header_default_name = "2.0 (myemail@uos.de)"
+# custom_header crawler = "CrawlerforSearchEnginge/" + name
+# custom_header searcher = "SearchEnginge Gugel/" + name
 
 vm009 = {
     "start_url" : "https://vm009.rz.uos.de/crawl/index.html",
