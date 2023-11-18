@@ -9,10 +9,11 @@ from daemon import MyDaemon
 app = Flask(__name__, static_url_path='/static')
 
 # choose a website to use
-v = website_dicts.vm009
+#v = website_dicts.vm009
+v = website_dicts.uos
 
 # if you need to create a new index by crawling from the start page (same as main_create!)
-# Crawler(v["custom_header_name"], v["index_path"]).crawl(v["start_url"])
+#Crawler(v["custom_header_name"], v["index_path"]).crawl(v["start_url"])
 
 # create index for searching
 index = Index(v["custom_header_name"],v["index_path"])

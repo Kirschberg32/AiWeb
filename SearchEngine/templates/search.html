@@ -42,15 +42,15 @@
                 <table>
                     <ul id="container">
                         <!--Loops through the results and shows-->
-                        {% for i,j,k in result[num - 1] %}
+                        {% for i,j,k,l in result[num - 1] %}
                             <a href="{{j}}" style="text-decoration: none;">
                                 <ul id="match">
                                     <!-- Log for the Website, if we want to add this, we need the url to the logo itself -->
-                                    <!--<img src="We need to enter the url here" alt="Website Logo" width="50" height="50">-->
+                                    <img src="{{l}}" alt="Website Logo" style="width: 3vh; height: 3vh;">
                                     
                                     <!-- Titel,Url and highlighted content -->
                                     <b><font style="font-size: 3vh;">{{i}}</font></b><br />
-                                    <u><font style="font-size: 1vh;">{{j}}</font></u><br />                                                        
+                                    <u><font style="font-size: 1.5vh;">{{j}}</font></u><br />                                                        
                                     <font style="font-size: 2vh;">{{k|safe}}</font><br /><br />
                                 </ul>
                             </a>  
@@ -79,7 +79,7 @@
         <footer>
             <p>Created for the course Artificial Intelligence and the Web</p>
             <p>Author: Eosandra (<a href="mailto:egrund@uos.de" style="color: #a1a5ff;">egrund@uos.de</a>), 
-                Fabian Kirsch[<a href="mailto:fkirsch@uos.de" style="color: #a1a5ff;">fkirsch@uos.de</a>)</p>
+                Fabian Kirsch(<a href="mailto:fkirsch@uos.de" style="color: #a1a5ff;">fkirsch@uos.de</a>)</p>
         </footer>        
     
     </body>

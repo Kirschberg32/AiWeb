@@ -55,12 +55,16 @@ section#matches {
 }
 ul#match {
     color: black;
-    background-color: #f8edfc;
+    background-color: #f0f0f0;
     border: 0.3vh solid #000;
+    display: inline-block;
     margin-bottom: 0.5vh; 
     width: 90vh;
+    transition: transform 0.3s ease;
 }
-    
+ul#match:hover {
+    transform: scale(0.95);
+}
     
 
 hr {
