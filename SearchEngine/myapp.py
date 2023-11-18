@@ -1,18 +1,19 @@
 # myapp.py
 
 from flask import Flask, request, render_template
-import main_create
+from crawler import Crawler
 from index import Index
 import website_dicts
 from daemon import MyDaemon
 
 app = Flask(__name__, static_url_path='/static')
 
-# to crawl
-#main_create.main()
-
 # choose a website to use
 v = website_dicts.vm009
+
+# if you need to create a new index by crawling from the start page (same as main_create!)
+# Crawler(v["custom_header_name"], v["index_path"]).crawl(v["start_url"])
+
 # create index for searching
 index = Index(v["custom_header_name"],v["index_path"])
 
@@ -42,9 +43,8 @@ def search():
     q = request.args.get('q')
 
     total, pagecount, current_page,last_page, result = index.search(q) #p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
-    all_matches.append(result)
+    all_matches.append(result) # (title, url, highlights, favicon_url) # ! favicon_url might be None!
     #print("\n\nresult:\n",all_matches)
-
     
     if result:
         match = str(total) + " matches estimated!"

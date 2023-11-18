@@ -14,7 +14,7 @@ def print_results(search_line, total_hits, results):
             print(f"\n{t}: {url}")
             print(high)
 
-def get_page(url, timeout_in_seconds, custom_headers):#(self,inputs_tuple):# (url, timeout_in_seconds = 2, custom_headers):
+def get_page(url, timeout_in_seconds, custom_headers):
         """
         retrieves a webpage given an url
 
@@ -27,7 +27,7 @@ def get_page(url, timeout_in_seconds, custom_headers):#(self,inputs_tuple):# (ur
             code (int): 1 for successful, 0 for was not html or not ok, -1 for server is too slow
             soup (bs4.BeautifulSoup): The content of the webpage if code = 1
         """
-        #url, timeout_in_seconds, custom_headers = inputs_tuple
+
         try:
             response = requests.get(url, timeout=timeout_in_seconds, headers=custom_headers)
 
@@ -50,7 +50,7 @@ def get_page(url, timeout_in_seconds, custom_headers):#(self,inputs_tuple):# (ur
             timeout_in_seconds += 1
 
             # Need to try again.
-            time.sleep(self.timeout_in_seconds / 2)
+            time.sleep(timeout_in_seconds / 2)
             return get_page(url,timeout_in_seconds,custom_headers)
 
         except requests.exceptions.RequestException as e:

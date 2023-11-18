@@ -91,7 +91,7 @@ class Crawler:
                     parsed_link = urlparse(link)
 
                     # check wether the link is a relative link
-                    if (not parsed_link.scheme and not parsed_link.netloc):
+                    if (not parsed_link.scheme) and (not parsed_link.netloc):
 
                         # join original url with relative one
                         full_url = urljoin(original_url,link)

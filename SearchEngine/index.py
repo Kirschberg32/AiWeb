@@ -4,6 +4,7 @@ import os
 import re
 from datetime import datetime, timedelta
 from concurrent import futures
+from urllib.parse import urljoin, urlparse
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID, DATETIME
 from whoosh.qparser import MultifieldParser, QueryParser
@@ -178,13 +179,13 @@ class Index:
         
     def convert_results(self,results):
         """
-        converts the search results into a usable format. Also reretrieves the webpages to create highlights
+        converts the search results into a usable format. Also reretrieves the webpages to create highlights and finds the favicon link if it exists
 
         Args:
             results (whoosh.searching.Results): An object retrieved by doing a search in a whoosh index
         
         Returns:
-            output (list): A list containing sets for each hit [(title, url, highlights), ...]
+            output (list): A list containing sets for each hit [(title, url, highlights, favicon_url), ...]
         """
         output = []
 
@@ -196,9 +197,41 @@ class Index:
         for r,code_soup in zip(results,responses_new):
 
             if code_soup[0] == 1: # only use new info if the server is reachable
-                output.append((r["title"], r["url"], r.highlights("content", text = code_soup[1].text )))
+
+                # get favicons of the pages
+                favicon_url = self.find_favicon(r["url"],code_soup[1])
+
+                output.append((r["title"], r["url"], r.highlights("content", text = code_soup[1].text ), favicon_url))
 
         return output
+    
+    def find_favicon(self, url,soup):
+        """
+        gets an url and a soup and returns the full urls to the favicon. If non found then the entry is None
+
+        Args:
+            url (str): The original url
+            soup (bs4.BeautifulSoup): The html code in a soup to search in for the favicon links
+
+        Returns:
+            favicon_url (str): The url for the favicon
+        """
+
+        # get favicons of the pages
+        favicon_link = soup.find("link", attrs={'rel': re.compile("^(shortcut icon|icon)$", re.I)})
+
+        # try in case favicon_link does not have an href, is is None already
+        try:
+            favicon_url = favicon_link['href']
+
+            # check wether the link is a relative link
+            parsed_link = urlparse(favicon_url)
+            if (not parsed_link.scheme) and (not parsed_link.netloc):
+                favicon_url = urljoin(url,favicon_url)
+
+            return favicon_url
+        except:
+            return None
 
     def correct_string(self,input_string):
         """
