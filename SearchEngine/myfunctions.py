@@ -24,7 +24,7 @@ def get_page(url, timeout_in_seconds, custom_headers):
             custom_headers (dict): Object used for header in requests
 
         Returns:
-            code (int): 1 for successful, 0 for was not html or not ok, -1 for server is too slow
+            code (int): 1 for successful, 0 for was not html or not ok, -1 for server is too slow, 503 for 503
             soup (bs4.BeautifulSoup): The content of the webpage if code = 1
         """
 
@@ -38,7 +38,11 @@ def get_page(url, timeout_in_seconds, custom_headers):
 
                 # analyse it and update index
                 soup = BeautifulSoup(response.content, 'html.parser') 
-                return 1, soup
+                if soup:
+                    return 1, soup
+            
+            if response.status_code == 503: # Service Unavailable
+                return 503, None
             return 0, None
             
         except requests.exceptions.Timeout:

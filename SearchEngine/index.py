@@ -91,7 +91,7 @@ class Index:
 
         self.preliminary_index = []
 
-    def update_index(self,url,new_soup):
+    def update_index(self,url,new_soup): # TODO lock
         """
         delete old entry for url and save a new one given new content
 
@@ -101,17 +101,17 @@ class Index:
         """
         # self.is_in_index(url,delete=True)
         index = self.open_index()
+        date = datetime.utcnow()
 
         # delete old entry
         try:
             with index.writer() as writer:
                 writer.delete_by_term("url", url)
+                writer.add_document(title=new_soup.title.text, content=new_soup.text, url=url, date=date)
         except IndexingError as e:
-            pass
             # does not exists, so just add the new one
-
-        # add new entry
-        self.add_to_Index(new_soup,url)
+            with index.writer() as writer:
+                writer.add_document(title=new_soup.title.text, content=new_soup.text, url=url, date=date)
 
     def search(self, input_string, limit = 15, page = 1):
         """
