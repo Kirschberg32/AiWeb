@@ -111,19 +111,27 @@ class Crawler:
                     # does not have an href
                     print("KeyError, there was no href: ", l)
 
-    def crawl_all(self):
+    def crawl_all(self, start_url = ""):
         """
         Crawls everything it finds (not recommended)
-        Only works when a start url is given when the crawler was created. 
+        Only works when a start url is given when the crawler was created or as parameter for this method
         At the moment the crawler does not append new urls to url_stack by itself, as the task is to only crawl one server
+
+        Args:
+            start_url (str): a string containing an url
         """
+
+        counter = 0
+
+        if start_url:
+            self.url_stack.append(start_url)
         
         while self.url_stack:
             # take next url to crawl next server
-            self.crawl(self.url_stack.pop(-1))
+            counter = self.crawl(self.url_stack.pop(-1),counter)
             self.timeout_in_seconds = self.timeout_default
 
-    def crawl(self, start_url, batch = 20):
+    def crawl(self, start_url, batch = 20, counter = 0):
         """
         crawls all websites that can be reached from a start_url on the same server. 
         This is done so the list of webpages to go does not become too long. 
@@ -131,6 +139,7 @@ class Crawler:
         Args:
             start_url (str): a string containing an url
             batch (int): After how many webpages to update the index
+            counter (int): How many webpages where already crawled in this run (will be increased during this method)
         """
 
         # check time to give an estimation of time left
@@ -138,6 +147,7 @@ class Crawler:
 
         self.timeout_in_seconds = self.timeout_default
 
+        self.url_stack_same_server = []
         self.url_stack_same_server.append(start_url)
 
         # while the stack is not empty
@@ -153,7 +163,7 @@ class Crawler:
                 time_estimation = ((time.time() - start ) /len_visited ) * len_togo
             else: 
                 time_estimation = self.timeout_in_seconds
-            print(f"Total: {len_visited} from {len_visited+len_togo}; {self.convert_time(time.time() - start)}")
+            print(f"Total: {len_visited + counter} from {len_visited+len_togo+ counter}; {self.convert_time(time.time() - start)}")
             print(f"Estimated time left for {len_togo} pages: {self.convert_time(time_estimation)}")
 
             # if not visited recently
@@ -172,6 +182,7 @@ class Crawler:
             elif code ==1: # if 0 then the returns where not html or not ok code
                 # update index
                 self.preliminary_index.append((soup,next_url))
+                counter += 1
                 
                 # finds all urls and saves the ones we want to visit in the future
                 self.find_url(soup,next_url,urlparse(next_url))
@@ -187,6 +198,8 @@ class Crawler:
         self.index.list_to_Index(self.preliminary_index)
         self.preliminary_index = []
         self.timeout_in_seconds = self.timeout_default
+
+        return counter
 
     def crawl_updates(self, age_in_days : int = 30):
         """
