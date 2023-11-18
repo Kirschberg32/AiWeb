@@ -58,8 +58,9 @@ ul#match {
     background-color: #f0f0f0;
     border: 0.3vh solid #000;
     display: inline-block;
-    margin-bottom: 0.5vh; 
-    width: 90vh;
+    margin-bottom: 0.5vh;  
+    width: 50%;
+
     transition: transform 0.3s ease;
 }
 ul#match:hover {
