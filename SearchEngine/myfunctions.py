@@ -56,6 +56,19 @@ def get_page(url, timeout_in_seconds, custom_headers):
             # Need to try again.
             time.sleep(timeout_in_seconds / 2)
             return get_page(url,timeout_in_seconds,custom_headers)
+        
+        except requests.exceptions.ConnectionError:
+
+            if timeout_in_seconds > 20:
+                return -1, None
+            
+            # the server seems to be too slow, give more time
+            timeout_in_seconds += 1
+
+            # Need to try again.
+            time.sleep(timeout_in_seconds / 2)
+            return get_page(url,timeout_in_seconds,custom_headers)
 
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
+            return -1, None
