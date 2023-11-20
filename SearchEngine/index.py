@@ -248,6 +248,8 @@ class Index:
             results (list): A list containing sets for each hit [(title, url, highlights), ...]
         """
 
+        print("Searching for page ", page)
+
         # helpful: https://whoosh.readthedocs.io/en/latest/searching.html
 
         index = self.open_index()
@@ -264,7 +266,8 @@ class Index:
                 with index.searcher(weighting = scoring.BM25F()) as searcher:
 
                     # find entries with all words in the content
-                    p = searcher.search_page(query,page,limit)
+                    p = searcher.search_page(query,pagenum = page,pagelen=limit)
+                    print("Offset: ", p.offset)
                     output = p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
                 done = True
 
@@ -272,6 +275,10 @@ class Index:
                 done = False
             finally:
                 self.wish_granted = False
+
+        for i in output[:-1]:
+            print(i)
+
         return output
         
     def find_old(self, age_in_days : int = 30):
@@ -330,6 +337,8 @@ class Index:
             res = executor.map(lambda p: get_page(*p),[(r["url"],self.timeout_default,self.custom_headers) for r in results])
         responses_new = list(res)
 
+        print(f"Found the content of {len(responses_new)} pages")
+
         for r,code_soup in zip(results,responses_new):
 
             if code_soup[0] == 1: # only use new info if the server is reachable
@@ -339,6 +348,7 @@ class Index:
 
                 output.append((r["title"], r["url"], r.highlights("content", text = code_soup[1].text ), favicon_url))
 
+        print(f"Will return {len(output)} results from convert_results")
         return output
     
     def find_favicon(self, url,soup):

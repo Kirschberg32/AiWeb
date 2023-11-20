@@ -71,6 +71,18 @@ class Crawler:
         if (not url in self.url_stack_same_server) and (not url in self.url_stack_same_server_for_later) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
             self.url_stack_same_server.append(url)
 
+    def append_url(self,url):
+        """
+        Appends a new url to the url_stack. 
+        It only checks whether the url already is in the list, whether it was already visited, or is in index or preliminary_index before appending it.
+
+        Args:
+            url (string): The url to append
+        """
+
+        if (not url in self.url_stack) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
+            self.url_stack_same_server.append(url)
+
     def pre_to_Index(self):
         """
         Add the preliminary_index to the index
@@ -117,7 +129,7 @@ class Crawler:
                             self.append_same_server(link)
                         else:
                             pass # because task is to crawl only one server
-                            #self.url_stack.append(link)
+                            #self.append_url(link)
 
                 except KeyError as e:
                     # does not have an href

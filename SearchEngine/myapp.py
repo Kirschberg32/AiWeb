@@ -1,10 +1,9 @@
 # myapp.py
 
 from flask import Flask, request, render_template
-from crawler import Crawler
 from index import Index
 import website_dicts
-from daemon import MyDaemon
+from updatedaemon import IndexUpdateDaemon
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -25,7 +24,7 @@ last_page = False
 total = 0
 q = ""
 
-daemon = MyDaemon(v).start()
+#IndexUpdateDaemon(v).start()
 
 @app.route("/")
 def start():
