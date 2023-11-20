@@ -38,7 +38,7 @@ def get_page(url, timeout_in_seconds, custom_headers):
 
                 # analyse it and update index
                 soup = BeautifulSoup(response.content, 'html.parser') 
-                if soup:
+                if soup and soup.text and soup.title:
                     return 1, soup
             
             if response.status_code == 503: # Service Unavailable

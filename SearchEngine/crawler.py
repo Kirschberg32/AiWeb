@@ -1,6 +1,7 @@
 """ A crawler build for a simple search engine"""
 from urllib.parse import urljoin, urlparse
 import time
+from datetime import datetime, timedelta
 
 from myfunctions import get_page
 from index import Index
@@ -53,8 +54,9 @@ class Crawler:
 
     def __del__(self):
         """
-        Should 
+        Saves the preliminary_index to the real index incase this object is destroyed before saving it itself.
         """
+        #if self.preliminary_index: # TODO make this code when lock is installed
         self.pre_to_Index()
 
     def append_same_server(self,url):
@@ -66,7 +68,7 @@ class Crawler:
             url (string): The url to append
         """
 
-        if (not url in self.url_stack_same_server) and (not url in self.urls_visited)and not self.is_in_preliminary(url) and not self.index.is_in_index(url):
+        if (not url in self.url_stack_same_server) and (not url in self.url_stack_same_server_for_later) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
             self.url_stack_same_server.append(url)
 
     def pre_to_Index(self):
@@ -133,6 +135,7 @@ class Crawler:
 
         counter = 0
         start = time.time()
+        self.empty_crawling_lists()
 
         if start_url:
             self.url_stack.append(start_url)
@@ -142,7 +145,7 @@ class Crawler:
             counter = self.crawl(self.url_stack.pop(-1),start, counter)
             self.timeout_in_seconds = self.timeout_default
 
-    def crawl(self, start_url, batch = 20, start = time.time(), counter = 0):
+    def crawl(self, start_url = "", batch = 20, start = time.time(), counter = 0):
         """
         crawls all websites that can be reached from a start_url on the same server. 
         This is done so the list of webpages to go does not become too long. 
@@ -154,8 +157,9 @@ class Crawler:
             counter (int): How many webpages where already crawled in this run (will be increased during this method)
         """
 
-        self.url_stack_same_server = []
-        self.url_stack_same_server.append(start_url)
+        # self.url_stack_same_server = []
+        if start_url:
+            self.url_stack_same_server.append(start_url)
         self.url_stack_same_server_for_later = [] # used so save urls where the server is too slow or returns 503 to check again later
 
         # while the stack is not empty
@@ -163,6 +167,9 @@ class Crawler:
 
             # take and remove first url from list
             next_url = self.url_stack_same_server.pop(-1)
+
+            # to not overwhelm the server wait before request again (politeness)
+            time.sleep(self.timeout_in_seconds / 2)
 
             counter += self.crawl_page(next_url,True, start,counter) # return 1 if added to index / preliminary index
 
@@ -179,6 +186,9 @@ class Crawler:
             # take and remove first url from list
             next_url = self.url_stack_same_server.pop(-1)
 
+            # to not overwhelm the server wait before request again (politeness)
+            time.sleep(self.timeout_in_seconds / 2)
+
             counter += self.crawl_page(True, next_url, start,counter) # return 1 if added to index / preliminary index
 
             if len(self.preliminary_index) >= batch:
@@ -187,7 +197,8 @@ class Crawler:
         self.pre_to_Index()
 
         # save rest for next index update
-        self.urls_to_visit_update.extend(self.url_stack_same_server_for_later)
+        date = datetime.utcnow()
+        self.urls_to_visit_update.extend([(u,date) for u in self.urls_to_visit_update])
 
         return counter
     
@@ -219,9 +230,6 @@ class Crawler:
         # if not visited recently
         #if next_url not in self.urls_visited and not self.index.is_in_index(next_url) and not self.is_in_preliminary(next_url):
 
-        # to not overwhelm the server wait before request again (politeness)
-        time.sleep(self.timeout_in_seconds / 2)
-
         # get page
         code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers)
 
@@ -233,8 +241,9 @@ class Crawler:
             self.find_url(soup,next_url,urlparse(next_url))
             return 1
         elif code == -1: # if the server is too slow
-            print("The server of: ", next_url, " is too slowly. Or 503")
-            print("The crawler will stop to crawl this page now.")
+            if printing:
+                print("The server of: ", next_url, " is too slowly. Or 503")
+                print("The crawler will stop to crawl this page now.")
             self.url_stack_same_server_for_later.append(next_url)
         elif code == 503:
             self.url_stack_same_server_for_later.append(next_url)
@@ -245,7 +254,7 @@ class Crawler:
 
         return 0
 
-    def crawl_updates(self, age_in_days : int = 30):
+    def crawl_updates(self, age_in_days : int = 3):
         """
         crawls pages again to get new information to make the index up to date
         https://docs.python.org/3/library/threading.html#rlock-objects
@@ -255,19 +264,54 @@ class Crawler:
         """
 
         urls_to_update = self.index.find_old(age_in_days)
+        urls_to_update.extend(self.urls_to_visit_update)
+        self.urls_to_visit_update = []
+        self.empty_crawling_lists()
+        self.url_stack = []
+
+        if len(urls_to_update) > 100:
+            pass
+            # save to hardware
 
         # TODO
-        # which order
-        # how to reuse methods I already have
-        # lock to make sure searching and updating do not collide
+        # lock index
         # Welche listen mit URLs aus dem RAM wollen wir noch auf der Festplatte speichern?
 
-        #for next_url in urls_to_update:
-            #code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers)
+        for next_url,next_date in urls_to_update:
+            print(f"Page: {next_url} is from {next_date.date()}")
+            code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers)
 
+            if code == 1:
+                # update index
+                self.index.update_index(next_url,soup)
+                
+                # finds all urls and saves the ones we want to visit in the future
+                self.find_url(soup,next_url,urlparse(next_url))
+                
+            elif code == -1: # if the server is too slow
 
+                # if older than half a year delete & forget
+                if next_date < datetime.utcnow() - timedelta(days=183): # the older one is smaller
+                    self.index.delete_from_index(next_url)
 
+                # if not old, but not in index add to list to remember
+                elif not self.index.is_in_index(next_url):
+                    # save with the original date to check again next time
+                    self.urls_to_visit_update.append((next_url,next_date))
 
+            elif code == 503: # Service Unavailable
+
+                self.index.delete_from_index(next_url)
+                if next_date > datetime.utcnow() - timedelta(days=365): # if older than one year
+                    self.urls_to_visit_update.append((next_url,next_date))
+            
+            else: # if not html or just not working forget
+                self.urls_visited.append(next_url) # TODO speicher urls_visited auf festplatte
+                self.index.delete_from_index(next_url)
+
+            # now do a quick crawl though the new urls that where found: 
+            self.crawl()
+            # self.crawl_all()
 
     def is_in_preliminary(self,url):
         """
@@ -284,6 +328,14 @@ class Crawler:
             if url == url2:
                 return True
         return False
+    
+    def empty_crawling_lists(self):
+        """ 
+        Empty all lists that are used during one of the crawling algorithms
+        """
+        self.url_stack_same_server = []
+        self.url_stack_same_server_for_later = []
+        self.preliminary_index = []
 
     def convert_time(self,time):
         """

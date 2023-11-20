@@ -2,6 +2,8 @@
 
 import os
 import re
+import random
+import time
 from datetime import datetime, timedelta
 from concurrent import futures
 from urllib.parse import urljoin, urlparse
@@ -9,9 +11,10 @@ from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID, DATETIME
 from whoosh.qparser import MultifieldParser, QueryParser
 from whoosh import scoring, qparser
-from whoosh.writing import IndexingError
+from whoosh.writing import IndexingError, LockError
 
 from myfunctions import get_page
+from queuethread import ThreadQueueSingleton
 
 class Index:
     """
@@ -20,14 +23,17 @@ class Index:
         index_path (str): A directory of where to save or load the whoosh index
         custom_headers (dict): Used as the header for requests when searching
         timeout_default (int): The default value for timeout before retrying the same server
+        priority (int): How important it is that this instance of Index has quick access to the whoosh index (0 for searching, else 2)
+        limitmb_index
     """
 
-    def __init__(self,name, index_path, timeout_default : int = 2):
+    def __init__(self,name, index_path, timeout_default : int = 2, priority = 2):
         """
         Args:
             index_path (str): A directory of where to save or load the whoosh index
             name (str): The name used for custom_headers
             timeout_default (int): The default value for timeout before retrying the same server
+            priority (int): How important it is that this instance of Index has quick access to the whoosh index (0 for searching, else 2)
         """
 
         self.index_path = index_path
@@ -35,6 +41,57 @@ class Index:
         self.custom_headers = {'User-Agent': "SearchEnginge Gugel/" + name}
 
         self.timeout_default = timeout_default
+
+        self.priority = priority
+
+        self.queue_thread = ThreadQueueSingleton()
+        self.wish_granted = False # changed in 
+
+        #self.limitmb_index = 256
+
+    # the following methods are used for queue.PriorityQueue
+
+    def __ne__(self,other):
+        if not isinstance(other,Index):
+            return self != other
+        return self.priority != other.priority
+    
+    def __eq__(self,other):
+        if not isinstance(other,Index):
+            return self == other
+        return self.priority == other.priority
+    
+    def __lt__(self,other):
+        if not isinstance(other,Index):
+            return self < other
+        return self.priority < other.priority
+    
+    def __le__(self,other):
+        if not isinstance(other,Index):
+            return self <= other
+        return self.priority <= other.priority
+    
+    def __gt__(self,other):
+        if not isinstance(other,Index):
+            return self > other
+        return self.priority > other.priority
+    
+    def __gt__(self,other):
+        if not isinstance(other,Index):
+            return self >= other
+        return self.priority >= other.priority
+    
+    # the following methods are used to communicate with ThreadQueeSingleson in self.queue_thread
+
+    def wish_and_wait(self):
+        """
+        Adds a wish to the Queue of QueueThread and waits until it was granted
+        """
+        self.queue_thread.add_wish(self)
+        while not self.wish_granted:
+            time.sleep(0.1)
+
+    # normal methods
 
     def open_index(self):
         """
@@ -69,8 +126,19 @@ class Index:
         index = self.open_index()
         date = datetime.utcnow()
 
-        with index.writer() as writer:
-            writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date)
+        done = False
+        while not done:
+
+            self.wish_and_wait()
+            try:
+                with index.writer() as writer:
+                    writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,5))) # TODO remove timedelta
+                    done = True
+            except LockError:
+                done = False
+            finally:
+                self.wish_granted = False
+            
 
     def list_to_Index(self,input_list):
         """
@@ -84,12 +152,21 @@ class Index:
         index = self.open_index()
         date = datetime.utcnow()
 
-        # automatically committed and closed writer
-        with index.writer() as writer:
-            for soup, url in input_list:
-                writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date)
+        done = False
+        while not done:
 
-        self.preliminary_index = []
+            self.wish_and_wait()
+            try:
+                # automatically committed and closed writer
+                with index.writer() as writer:
+                    for soup, url in input_list:
+                        writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,5)))# TODO remove timedelta
+                self.preliminary_index = []
+                done = True
+            except LockError:
+                done = False
+            finally:
+                self.wish_granted = False
 
     def update_index(self,url,new_soup): # TODO lock
         """
@@ -103,15 +180,54 @@ class Index:
         index = self.open_index()
         date = datetime.utcnow()
 
-        # delete old entry
-        try:
-            with index.writer() as writer:
-                writer.delete_by_term("url", url)
-                writer.add_document(title=new_soup.title.text, content=new_soup.text, url=url, date=date)
-        except IndexingError as e:
-            # does not exists, so just add the new one
-            with index.writer() as writer:
-                writer.add_document(title=new_soup.title.text, content=new_soup.text, url=url, date=date)
+        done = False
+        while not done:
+
+            self.wish_and_wait()
+            try:
+                with index.writer() as writer:
+                    try:
+                        writer.delete_by_term("url", url)
+                    except IndexingError: # does not exists, so just add the new one
+                        pass
+                    writer.add_document(title=new_soup.title.text, content=new_soup.text, url=url, date=date)
+                done = True
+
+            except LockError:
+                done = False
+            finally:
+                self.wish_granted = False
+
+    def delete_from_index(self,url):
+        """
+        delete old entry from index by using url
+
+        Args:
+            url (str): the entry with this url will be deleted if it exists
+
+        Returns:
+            value (bool): True if entry was deleted, False if it was not found
+        """
+
+        index = self.open_index()
+
+        done = False
+        found = False
+        while not done:
+
+            self.wish_and_wait()
+            try:
+                try:
+                    with index.writer() as writer:
+                        writer.delete_by_term("url", url)
+                    found = True
+                except IndexingError: # if entry was not found
+                    pass
+            except LockError:
+                done = False
+            finally:
+                self.wish_granted = False
+        return found
 
     def search(self, input_string, limit = 15, page = 1):
         """
@@ -139,18 +255,24 @@ class Index:
         # use MultifieldParser to search in different fields at once. 
         query = MultifieldParser(["title", "content"], index.schema, group=qparser.OrGroup).parse(input_string)
 
-        # scoring BM25F takes frequency in a document in the whole index as well as length of documents into account
-        with index.searcher(weighting = scoring.BM25F()) as searcher:
+        done = False
+        while not done:
 
-            # find entries with all words in the content!!!
-            p = searcher.search_page(query,page,limit) # search_page(query,1,pagelen=10)
+            self.wish_and_wait()
+            try:
+                # scoring BM25F takes frequency in a document in the whole index as well as length of documents into account
+                with index.searcher(weighting = scoring.BM25F()) as searcher:
 
-            # have to extract all important information here before searcher is closed
-            #total_hits = resultspage.total
+                    # find entries with all words in the content
+                    p = searcher.search_page(query,page,limit)
+                    output = p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
+                done = True
 
-            # use highlightes to have text around the results. but content is not stored
-            # taking too much space if 
-            return p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
+            except LockError as le:
+                done = False
+            finally:
+                self.wish_granted = False
+        return output
         
     def find_old(self, age_in_days : int = 30):
         """
@@ -172,14 +294,28 @@ class Index:
         # query.add_plugin(DateParserPlugin)()
         query = query.parse(input_string)
 
-        with index.searcher() as searcher:
-            results = searcher.search(query,limit=None) # do this in batches if working with more data using search_page
+        done = False
+        while not done:
 
-            return [r["url"] for r in results]
+            self.wish_and_wait()
+            try:
+                with index.searcher() as searcher:
+                    results = searcher.search(query,limit=None) # do this in batches if working with more data using search_page
+                    #print("Results in find_old: ", results)
+                    output =  [(r["url"],r["date"]) for r in results]
+                done = True
+
+            except LockError:
+                done = False
+            finally:
+                self.wish_granted = False
+
+        return output
         
     def convert_results(self,results):
         """
-        converts the search results into a usable format. Also reretrieves the webpages to create highlights and finds the favicon link if it exists
+        converts the search results into a usable format. Also reretrieves the webpages to create highlights and finds the favicon link if it exists.
+        Important: Use while index and searcher are still open. 
 
         Args:
             results (whoosh.searching.Results): An object retrieved by doing a search in a whoosh index
@@ -248,37 +384,58 @@ class Index:
 
         query = MultifieldParser(["title", "content"], index.schema, group=qparser.OrGroup).parse(input_string)
 
-        with index.searcher() as searcher:
-            corrected = searcher.correct_query(query, input_string)
-            if corrected.query != query: # if query changed
-                return corrected.string
+        done = False
+        output = ""
+        while not done:
+
+            self.wish_and_wait()
+            try:
+                with index.searcher() as searcher:
+                    corrected = searcher.correct_query(query, input_string)
+                    if corrected.query != query: # if query changed
+                        output = corrected.string
+                done = True
+
+            except LockError:
+                done = False
+            finally:
+                self.wish_granted = False
             
-        return ""
+        return output
     
-    def is_in_index(self,url, delete = False):
+    def is_in_index(self,url):
         """ 
         checks whether there is an entry with url = url in the index
 
         Args:
             url (str): the url to look for
-            delete (bool): True -> delete entry if it is found in index
 
         Returns:
-            value (bool): True if is in index, False if not; or if always is False and self.check_index is True value is False
+            value (bool): True if is in index, False if not
         """
 
         index = self.open_index()
 
         # check if old entry exists
         query = QueryParser("url", index.schema, group=qparser.OrGroup).parse(url)
-        with index.searcher() as searcher:
-            results = searcher.search(query)
-            if len(results)> 0 and results[0]["url"]==url:
-                if delete:
-                    # delete old entry
-                    with index.writer() as writer:
-                        writer.delete_by_term("url", url)
-                return True
-        return False
 
-    
+        done = False
+        found = False
+        while not done:
+
+            self.wish_and_wait()
+            try:
+                with index.searcher() as searcher:
+                    results = searcher.search(query)
+
+                    # if found something and the url is the same for the best match
+                    if len(results)> 0 and results[0]["url"]==url:
+                        found = True
+                done = True
+
+            except LockError:
+                done = False
+            finally:
+                self.wish_granted = False
+
+        return found
