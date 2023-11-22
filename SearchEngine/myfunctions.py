@@ -14,7 +14,7 @@ def print_results(search_line, total_hits, results):
             print(f"\n{t}: {url}")
             print(high)
 
-def get_page(url, timeout_in_seconds, custom_headers):
+def get_page(url, timeout_in_seconds, custom_headers, printing = False):
         """
         retrieves a webpage given an url
 
@@ -22,6 +22,7 @@ def get_page(url, timeout_in_seconds, custom_headers):
             url (str): The url to retrieve from
             timeout_in_seconds (int): used for requests timeout
             custom_headers (dict): Object used for header in requests
+            printing (bool): Whether to print the result
 
         Returns:
             code (int): 1 for successful, 0 for was not html or not ok, -1 for server is too slow, 503 for 503
@@ -31,7 +32,8 @@ def get_page(url, timeout_in_seconds, custom_headers):
         try:
             response = requests.get(url, timeout=timeout_in_seconds, headers=custom_headers)
 
-            print("\n",response.status_code, url)
+            if printing:
+                print("\n",response.status_code, url)
             
             # if no error message and it is an html response
             if response.ok and "text/html" in response.headers["content-type"]:

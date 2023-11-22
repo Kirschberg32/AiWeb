@@ -9,8 +9,8 @@ from concurrent import futures
 from urllib.parse import urljoin, urlparse
 from whoosh.index import create_in, exists_in, open_dir
 from whoosh.fields import Schema, TEXT, ID, DATETIME
-from whoosh.qparser import MultifieldParser, QueryParser
-from whoosh import scoring, qparser
+from whoosh.qparser import MultifieldParser, QueryParser, OrGroup
+from whoosh.scoring import BM25F
 from whoosh.writing import IndexingError, LockError
 
 from myfunctions import get_page
@@ -249,13 +249,14 @@ class Index:
         """
 
         print("Searching for page ", page)
+        starting_time = time.time()
 
         # helpful: https://whoosh.readthedocs.io/en/latest/searching.html
 
         index = self.open_index()
 
         # use MultifieldParser to search in different fields at once. 
-        query = MultifieldParser(["title", "content"], index.schema, group=qparser.OrGroup).parse(input_string)
+        query = MultifieldParser(["title", "content"], index.schema, group=OrGroup).parse(input_string)
 
         done = False
         while not done:
@@ -263,15 +264,15 @@ class Index:
             self.wish_and_wait()
             try:
                 # scoring BM25F takes frequency in a document in the whole index as well as length of documents into account
-                with index.searcher(weighting = scoring.BM25F()) as searcher:
+                with index.searcher(weighting = BM25F()) as searcher:
 
                     # find entries with all words in the content
-                    p = searcher.search_page(query,pagenum = page,pagelen=limit)
-                    print("Offset: ", p.offset)
-                    output = p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results)
+                    p = searcher.search_page(query,page,pagelen=limit)
+                    output = p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results[p.offset:])
+
                 done = True
 
-            except LockError as le:
+            except LockError:
                 done = False
             finally:
                 self.wish_granted = False
@@ -336,8 +337,7 @@ class Index:
         with futures.ThreadPoolExecutor(max_workers=15) as executor:
             res = executor.map(lambda p: get_page(*p),[(r["url"],self.timeout_default,self.custom_headers) for r in results])
         responses_new = list(res)
-
-        print(f"Found the content of {len(responses_new)} pages")
+        
 
         for r,code_soup in zip(results,responses_new):
 
@@ -392,7 +392,7 @@ class Index:
 
         index = self.open_index()
 
-        query = MultifieldParser(["title", "content"], index.schema, group=qparser.OrGroup).parse(input_string)
+        query = MultifieldParser(["title", "content"], index.schema).parse(input_string)
 
         done = False
         output = ""
@@ -427,7 +427,7 @@ class Index:
         index = self.open_index()
 
         # check if old entry exists
-        query = QueryParser("url", index.schema, group=qparser.OrGroup).parse(url)
+        query = QueryParser("url", index.schema).parse(url)
 
         done = False
         found = False

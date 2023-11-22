@@ -243,7 +243,7 @@ class Crawler:
         #if next_url not in self.urls_visited and not self.index.is_in_index(next_url) and not self.is_in_preliminary(next_url):
 
         # get page
-        code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers)
+        code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers, True)
 
         if code == 1:
             # update index
@@ -291,7 +291,7 @@ class Crawler:
 
         for next_url,next_date in urls_to_update:
             print(f"Page: {next_url} is from {next_date.date()}")
-            code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers)
+            code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers, True)
 
             if code == 1:
                 # update index
