@@ -15,6 +15,7 @@ from whoosh.writing import IndexingError, LockError
 
 from myfunctions import get_page
 from queuethread import ThreadQueueSingleton
+from myhighlighter import SeparatTextHighlighter
 
 class Index:
     """
@@ -245,11 +246,8 @@ class Index:
             pagecount (int): How many pages exist
             pagenum (int): Which page this is
             is_last_page (bool): whether this is the last page
-            results (list): A list containing sets for each hit [(title, url, highlights), ...]
+            results (list): A list containing sets for each hit [(title, url, SeparateTextHighlighter), ...]
         """
-
-        print("Searching for page ", page)
-        starting_time = time.time()
 
         # helpful: https://whoosh.readthedocs.io/en/latest/searching.html
 
@@ -268,7 +266,7 @@ class Index:
 
                     # find entries with all words in the content
                     p = searcher.search_page(query,page,pagelen=limit)
-                    output = p.total, p.pagecount, p.pagenum, p.is_last_page(), self.convert_results(p.results[p.offset:])
+                    output = p.total, p.pagecount, p.pagenum, p.is_last_page(), self.get_highlights_and_favicon([(r["title"], r["url"], SeparatTextHighlighter(r,"content")) for r in p.results[p.offset:]])
 
                 done = True
 
@@ -277,8 +275,34 @@ class Index:
             finally:
                 self.wish_granted = False
 
-        for i in output[:-1]:
-            print(i)
+        return output
+    
+    def get_highlights_and_favicon(self,results):
+        """
+        Retrieves the webpages to create highlights and finds the favicon link if it exists.
+
+        Args:
+            results (list): The results of Index.search [(title, url, SeparatTextHighlighter), ...]
+        
+        Returns:
+            output (list): A list containing sets for each hit [(title, url, highlights, favicon_url), ...]
+        """
+
+        output = []
+
+        # ask for new content parallel for all results
+        with futures.ThreadPoolExecutor(max_workers=15) as executor:
+            res = executor.map(lambda p: get_page(*p),[(url,self.timeout_default,self.custom_headers) for _,url,_ in results])
+        responses_new = list(res)
+
+        for (t,url,highlighter), (code, soup) in zip(results,responses_new):
+
+            if code == 1: # only use new info if the server is reachable
+
+                # get favicons of the pages
+                favicon_url = self.find_favicon(url,soup)
+
+                output.append((t, url, highlighter.highlight_text(text = soup.text), favicon_url))
 
         return output
         
@@ -318,37 +342,6 @@ class Index:
             finally:
                 self.wish_granted = False
 
-        return output
-        
-    def convert_results(self,results):
-        """
-        converts the search results into a usable format. Also reretrieves the webpages to create highlights and finds the favicon link if it exists.
-        Important: Use while index and searcher are still open. 
-
-        Args:
-            results (whoosh.searching.Results): An object retrieved by doing a search in a whoosh index
-        
-        Returns:
-            output (list): A list containing sets for each hit [(title, url, highlights, favicon_url), ...]
-        """
-        output = []
-
-        # ask for new content parallel for all results
-        with futures.ThreadPoolExecutor(max_workers=15) as executor:
-            res = executor.map(lambda p: get_page(*p),[(r["url"],self.timeout_default,self.custom_headers) for r in results])
-        responses_new = list(res)
-        
-
-        for r,code_soup in zip(results,responses_new):
-
-            if code_soup[0] == 1: # only use new info if the server is reachable
-
-                # get favicons of the pages
-                favicon_url = self.find_favicon(r["url"],code_soup[1])
-
-                output.append((r["title"], r["url"], r.highlights("content", text = code_soup[1].text ), favicon_url))
-
-        print(f"Will return {len(output)} results from convert_results")
         return output
     
     def find_favicon(self, url,soup):
