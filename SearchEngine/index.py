@@ -230,7 +230,7 @@ class Index:
                 self.wish_granted = False
         return found
 
-    def search(self, input_string, limit = 15, page = 1):
+    def search(self, input_string, limit = 15):
         """
         Searches in the index for a search term.
         It searches in the title and content and is a default OR search. It uses BM25F as a scoring algorithm. 
@@ -239,14 +239,10 @@ class Index:
         Args: 
             input_string (str): A string containing the search term
             limit (int): How many results to return for each page
-            page (int>0): results for which page to load
 
         Returns:
             total_hits (int): The estimated number of total hits
-            pagecount (int): How many pages exist
-            pagenum (int): Which page this is
-            is_last_page (bool): whether this is the last page
-            results (list): A list containing sets for each hit [(title, url, SeparateTextHighlighter), ...]
+            results (list): A list containing sets for each hit [(title, url, SeparatTextHighlighter), ...]
         """
 
         # helpful: https://whoosh.readthedocs.io/en/latest/searching.html
@@ -265,8 +261,8 @@ class Index:
                 with index.searcher(weighting = BM25F()) as searcher:
 
                     # find entries with all words in the content
-                    p = searcher.search_page(query,page,pagelen=limit)
-                    output = p.total, p.pagecount, p.pagenum, p.is_last_page(), self.get_highlights_and_favicon([(r["title"], r["url"], SeparatTextHighlighter(r,"content")) for r in p.results[p.offset:]])
+                    results = searcher.search(query,limit=limit)
+                    output = len(results), [(r["title"], r["url"], SeparatTextHighlighter(r,"content")) for r in results]
 
                 done = True
 

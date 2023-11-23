@@ -14,7 +14,24 @@ def print_results(search_line, total_hits, results):
             print(f"\n{t}: {url}")
             print(high)
 
-def get_page(url, timeout_in_seconds, custom_headers, printing = False):
+def thread_highlights(index, results, all_matches):
+    """
+    The thread function that gets highlights and favicon in the background when given to a thread. Appends the results to global all_matches
+
+    Args:
+        index (index.Index): The index to use the get_highlights_and_favicon from
+        results (list): The results of Index.search [(title, url, SeparatTextHighlighter), ...]
+    """
+
+    print("Started highlights thread")
+
+    results_with_hf = index.get_highlights_and_favicon(results)
+
+    all_matches.append(results_with_hf)
+
+    print("End highlights thread")
+
+def get_page(url, timeout_in_seconds, custom_headers, printing = True):
         """
         retrieves a webpage given an url
 
