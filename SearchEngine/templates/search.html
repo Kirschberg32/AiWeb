@@ -58,16 +58,19 @@
                     </ul>
                     <!-- Button to load more matches -->
                     {% if pagecount > 1 or result|length >= num %}
+                        {% if reached_limit %}
+                            Reached the limit of available search results. <br />
+                        {% endif %}
                         <!-- Lower Bound -->
                         {% if num > 1 %}
-                            <form action="{{ url_for('load_more', num=num - 1) }}" method="post">
+                            <form action="{{ url_for('load_page', num=num - 1,q=req) }}" method="post">
                                 <input type="submit" value="Go Back">
                             </form>
                         {% endif %}
                         <!-- Upper Bound -->
-                        {% if num < pagecount or num < result|length %}
-                            <form action="{{ url_for('load_more', num=num + 1) }}" method="post">
-                                <input type="submit" value="Load More">
+                        {% if num < pagecount and not reached_limit%}
+                            <form action="{{ url_for('load_page', num=num + 1, q=req) }}" method="post">
+                                <input type="submit" value="Next Page">
                             </form>
                         {% endif %}
                     {% endif %}

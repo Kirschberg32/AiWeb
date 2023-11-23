@@ -2,18 +2,6 @@ import time
 import requests
 from bs4 import BeautifulSoup
 
-def print_total(number, search_line):
-    print(f"\nFound {number} total hits for '{search_line}'.")
-
-def print_results(search_line, total_hits, results):
-    # print a line with search line and total hits
-    print_total(total_hits, search_line)
-    # if there are hits, print title, url and a highlight
-    if results:
-        for t,url, high in results:
-            print(f"\n{t}: {url}")
-            print(high)
-
 def thread_highlights(index, results, all_matches):
     """
     The thread function that gets highlights and favicon in the background when given to a thread. Appends the results to global all_matches
@@ -23,15 +11,11 @@ def thread_highlights(index, results, all_matches):
         results (list): The results of Index.search [(title, url, SeparatTextHighlighter), ...]
     """
 
-    print("Started highlights thread")
-
     results_with_hf = index.get_highlights_and_favicon(results)
 
     all_matches.append(results_with_hf)
 
-    print("End highlights thread")
-
-def get_page(url, timeout_in_seconds, custom_headers, printing = True):
+def get_page(url, timeout_in_seconds, custom_headers, printing = False):
         """
         retrieves a webpage given an url
 

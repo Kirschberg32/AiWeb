@@ -48,7 +48,7 @@ class Index:
         self.queue_thread = ThreadQueueSingleton()
         self.wish_granted = False # changed in 
 
-        #self.limitmb_index = 256
+        self.timeline = 30
 
     # the following methods are used for queue.PriorityQueue
 
@@ -133,7 +133,7 @@ class Index:
             self.wish_and_wait()
             try:
                 with index.writer() as writer:
-                    writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,5))) # TODO remove timedelta
+                    writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,self.timeline)))
                     done = True
             except LockError:
                 done = False
@@ -161,7 +161,7 @@ class Index:
                 # automatically committed and closed writer
                 with index.writer() as writer:
                     for soup, url in input_list:
-                        writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,5)))# TODO remove timedelta
+                        writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,self.timeline)))
                 self.preliminary_index = []
                 done = True
             except LockError:
@@ -169,7 +169,7 @@ class Index:
             finally:
                 self.wish_granted = False
 
-    def update_index(self,url,new_soup): # TODO lock
+    def update_index(self,url,new_soup):
         """
         delete old entry for url and save a new one given new content
 

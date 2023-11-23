@@ -266,7 +266,7 @@ class Crawler:
 
         return 0
 
-    def crawl_updates(self, age_in_days : int = 3):
+    def crawl_updates(self, age_in_days : int = 30):
         """
         crawls pages again to get new information to make the index up to date
         https://docs.python.org/3/library/threading.html#rlock-objects

@@ -25,8 +25,8 @@ class IndexUpdateDaemon(threading.Thread):
         """
 
         # create schedule plan
-        #schedule.every().tuesday.at(self.update_time).do(self._daily_daemon_function,'It is ' + self.update_time)
-        schedule.every().second.do(self._daily_daemon_function)
+        schedule.every().tuesday.at(self.update_time).do(self._daily_daemon_function,'It is ' + self.update_time)
+        #schedule.every().second.do(self._daily_daemon_function)
 
         while True:
             schedule.run_pending() # only one running at a time

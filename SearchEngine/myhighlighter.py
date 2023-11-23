@@ -64,6 +64,9 @@ class SeparatTextHighlighter(Highlighter):
             self.pinpoint_bool = False
             # Retokenize the text
             self.analyzer = results.searcher.schema[fieldname].analyzer
+            #print("Analyzer: ", type(self.analyzer))
+            #print("Analyzer: ", self.analyzer)
+            # Analyzer:  CompositeAnalyzer(RegexTokenizer(expression=re.compile('\\w+(\\.?\\w+)*'), gaps=False), LowercaseFilter(), StopFilter(stops=frozenset({'are', 'a', 'for', 'this', 'we', 'us', 'or', 'of', 'be', 'your', 'the', 'if', 'with', 'you', 'at', 'to', 'that', 'will', 'from', 'on', 'yet', 'it', 'as', 'can', 'not', 'in', 'by', 'an', 'is', 'when', 'have', 'may', 'tbd', 'and'}), min=2, max=None, renumber=True)) 
 
     def highlight_text(self, text, top=3, minscore=1):
         """
