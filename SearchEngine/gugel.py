@@ -4,11 +4,17 @@ from flask import Flask, request, render_template, session
 import threading
 import time
 import secrets
+import logging
 
 from mylib.index import Index
 from mylib import website_dicts
 from mylib.updatedaemon import IndexUpdateDaemon
 from mylib.myfunctions import thread_highlights
+
+# Logging
+logging.basicConfig(filename='gugel.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+logger.info('Start gugel engine')
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = secrets.token_hex()

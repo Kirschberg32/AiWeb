@@ -1,6 +1,11 @@
 import queue
 import threading
 import time
+import logging
+
+# Logging
+logging.basicConfig(filename='gugel.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class ThreadQueueSingleton(threading.Thread):
     """
@@ -24,6 +29,7 @@ class ThreadQueueSingleton(threading.Thread):
         self.queue = queue.PriorityQueue()
         self.running = True
         self.start()
+        logger.info('Initialized and started ThreadQueueSingleton')
     
     @classmethod
     def get_instance(cls):

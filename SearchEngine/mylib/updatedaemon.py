@@ -1,8 +1,13 @@
 import time
 import threading
 import schedule
+import logging
 
 import mylib.crawler
+
+# Logging
+logging.basicConfig(filename='gugel.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class IndexUpdateDaemon(threading.Thread):
     """
@@ -19,6 +24,8 @@ class IndexUpdateDaemon(threading.Thread):
 
         self.info_dict = info_dict
         self.update_time = update_time
+
+        logger.info('Initialized Daemon')
 
     def _the_daemon(self):
         """
