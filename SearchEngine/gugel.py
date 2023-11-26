@@ -1,10 +1,12 @@
 # myapp.py
 
-from flask import Flask, request, render_template, session
+from flask import Flask, request, render_template, session #add abort for testing
+from werkzeug.exceptions import HTTPException
 import threading
 import time
 import secrets
 import logging
+import traceback
 
 from mylib.index import Index
 from mylib import website_dicts
@@ -34,6 +36,7 @@ pagelen = 15
 all_search_results_dict = {}
 
 IndexUpdateDaemon(v).start()
+logger.info('Started Daemon')
 
 def prepare():
     if not 'user_id' in session:
@@ -98,6 +101,19 @@ def load_page(num,q):
             T.start()
     elif num < g["pagecount"]: # If there is no more page, even though pagecount is not reached (limit is reached)
         reached_limit = True
+
     
     return render_template('search.html', req = g["q"],match = str(g["total"]) + " matches estimated!", result=g["all_matches"], pagecount = g["pagecount"], num = num, reached_limit = reached_limit)
-    
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # pass through HTTP errors
+    logger.error(f'{e} occured') 
+    if isinstance(e, HTTPException):
+        return e    
+    # now you're handling non-HTTP exceptions only
+    return """
+        <pre>Something went wrong! Try reloading the start page<br />
+        <a href="{{ url_for('/') }}">Gugel</a></pre>
+        """
+
