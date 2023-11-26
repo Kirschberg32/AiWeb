@@ -6,7 +6,6 @@ import threading
 import time
 import secrets
 import logging
-import traceback
 
 from mylib.index import Index
 from mylib import website_dicts

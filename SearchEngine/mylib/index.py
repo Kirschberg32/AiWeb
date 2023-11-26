@@ -45,7 +45,7 @@ class Index:
 
         self.priority = priority
 
-        self.queue_thread = ThreadQueueSingleton()
+        self.queue_thread = ThreadQueueSingleton.get_instance()
         self.wish_granted = False # changed in 
 
         self.timeline = 30
