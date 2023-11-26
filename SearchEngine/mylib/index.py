@@ -13,9 +13,9 @@ from whoosh.qparser import MultifieldParser, QueryParser, OrGroup
 from whoosh.scoring import BM25F
 from whoosh.writing import IndexingError, LockError
 
-from myfunctions import get_page
-from queuethread import ThreadQueueSingleton
-from myhighlighter import SeparatTextHighlighter
+from mylib.myfunctions import get_page
+from mylib.queuethread import ThreadQueueSingleton
+from mylib.myhighlighter import SeparatTextHighlighter
 
 class Index:
     """

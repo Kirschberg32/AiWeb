@@ -5,10 +5,10 @@ import threading
 import time
 import secrets
 
-from index import Index
-import website_dicts
-from updatedaemon import IndexUpdateDaemon
-from myfunctions import thread_highlights
+from mylib.index import Index
+from mylib import website_dicts
+from mylib.updatedaemon import IndexUpdateDaemon
+from mylib.myfunctions import thread_highlights
 
 app = Flask(__name__, static_url_path='/static')
 app.secret_key = secrets.token_hex()

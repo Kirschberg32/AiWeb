@@ -1,7 +1,8 @@
 import time
 import threading
-import crawler
 import schedule
+
+import mylib.crawler
 
 class IndexUpdateDaemon(threading.Thread):
     """
@@ -42,7 +43,7 @@ class IndexUpdateDaemon(threading.Thread):
         print("daily_daemon_function ends")
 
 def main():
-    import website_dicts
+    import mylib.website_dicts
     v = website_dicts.test
 
     IndexUpdateDaemon(v).start()

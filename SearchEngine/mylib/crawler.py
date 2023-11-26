@@ -3,8 +3,8 @@ from urllib.parse import urljoin, urlparse
 import time
 from datetime import datetime, timedelta
 
-from myfunctions import get_page
-from index import Index
+from mylib.myfunctions import get_page
+from mylib.index import Index
 
 class Crawler:
     """
