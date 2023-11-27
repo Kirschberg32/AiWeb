@@ -50,8 +50,7 @@ class Crawler:
         if os.path.isfile(self.urls_visited_path):
             with open(self.urls_visited_path) as file:
                 for line in file:
-                    splitted = line.split(',')
-                    self.urls_visited.append((splitted[0],datetime.strptime(splitted[1],'%y-%m-%d %H:%M:%S')))
+                    self.urls_visited.append(line)
         else:
             with open(self.urls_visited_path, 'w') as file:
                 pass

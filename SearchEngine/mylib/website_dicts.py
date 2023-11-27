@@ -19,3 +19,14 @@ test = {
     "custom_header_name" : custom_header_default_name,
     "path" : "test"
 }
+
+my_dicts = [vm009, uos, test]
+
+def find_dict(path):
+    """ searches for a dict with "path" = path """
+
+    for d in my_dicts:
+        if d["path"] == path:
+            return d
+        
+    return None
