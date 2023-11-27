@@ -1,7 +1,7 @@
 
 from whoosh.highlight import Highlighter, Token, groupby, set_matched_filter, top_fragments
 
-class SeparatTextHighlighter(Highlighter):
+class SavingHighlighter(Highlighter):
     """ A class which saves the data for creating highlights later with the text
     
     Attributes:

@@ -8,7 +8,7 @@ def thread_highlights(index, results, all_matches):
 
     Args:
         index (index.Index): The index to use the get_highlights_and_favicon from
-        results (list): The results of Index.search [(title, url, SeparatTextHighlighter), ...]
+        results (list): The results of Index.search [(title, url, SavingHighlighter), ...]
     """
 
     results_with_hf = index.get_highlights_and_favicon(results)

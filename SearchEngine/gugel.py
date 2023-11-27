@@ -38,6 +38,10 @@ IndexUpdateDaemon(v).start()
 logger.info('Started Daemon')
 
 def prepare():
+    """
+    prepare by checking whether this user already has a user_id so we can use it as key for the search results
+    """
+
     if not 'user_id' in session:
         session['user_id'] = secrets.token_hex(16)
         all_search_results_dict[session['user_id']] = {"pagecount": 0, "match": 0, "all_matches": [], "result": [], "user_id" : session['user_id'], "last_page": False, "total":0, "q":""}
@@ -50,6 +54,12 @@ def start():
 
 @app.route("/search")
 def search():
+    """
+    Do a search using argument q. Get 1 million results max (if you want to have more make sure the server can handle more). The results of the search are savid in all_search_results_dict with the user_id as key. 
+    Load highlights and favicon for first page. 
+    Try to correct string. 
+    Finally load highlights and favicons for next page in a thread. 
+    """
 
     g = prepare()
 
@@ -85,6 +95,15 @@ def search():
 
 @app.route('/search-<q>/Page-<int:num>', methods=['POST']) # TODO find out how to have search q with ? as in
 def load_page(num,q):
+    """
+    When user wants more results
+    Wait until highlights and favicon for this page are done. Then start a thread to load them for the next page before rendering the template. 
+    Also checks whether there is another page of results (when there are more than 1 million results, total can be bigger than len(results))
+
+    Args: 
+        num (int): The page to load
+        q (str): The search query
+    """
 
     g = prepare()
 
@@ -115,4 +134,3 @@ def handle_exception(e):
         <pre>Something went wrong! Try reloading the start page<br />
         <a href="{{ url_for('/') }}">Gugel</a></pre>
         """
-

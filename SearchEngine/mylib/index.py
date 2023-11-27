@@ -14,11 +14,12 @@ from whoosh.scoring import BM25F
 from whoosh.writing import IndexingError, LockError
 
 from mylib.myfunctions import get_page
-from mylib.queuethread import ThreadQueueSingleton
-from mylib.myhighlighter import SeparatTextHighlighter
+from mylib.queuesingleton import ThreadQueueSingleton
+from mylib.myhighlighter import SavingHighlighter
 
 class Index:
     """
+    An object to manage a whoosh index. It has a priority as attribute and is comparable to other instances of Index. 
 
     Attributes:
         index_path (str): A directory of where to save or load the whoosh index
@@ -50,7 +51,7 @@ class Index:
 
         self.timeline = 30
 
-    # the following methods are used for queue.PriorityQueue
+    # the following methods are used for queue.PriorityQueue. They make instances of Index comparable
 
     def __ne__(self,other):
         if not isinstance(other,Index):
@@ -242,7 +243,7 @@ class Index:
 
         Returns:
             total_hits (int): The estimated number of total hits
-            results (list): A list containing sets for each hit [(title, url, SeparatTextHighlighter), ...]
+            results (list): A list containing sets for each hit [(title, url, SavingHighlighter), ...]
         """
 
         # helpful: https://whoosh.readthedocs.io/en/latest/searching.html
@@ -262,7 +263,7 @@ class Index:
 
                     # find entries with all words in the content
                     results = searcher.search(query,limit=limit)
-                    output = len(results), [(r["title"], r["url"], SeparatTextHighlighter(r,"content")) for r in results]
+                    output = len(results), [(r["title"], r["url"], SavingHighlighter(r,"content")) for r in results]
 
                 done = True
 
@@ -278,7 +279,7 @@ class Index:
         Retrieves the webpages to create highlights and finds the favicon link if it exists.
 
         Args:
-            results (list): The results of Index.search [(title, url, SeparatTextHighlighter), ...]
+            results (list): The results of Index.search [(title, url, SavingHighlighter), ...]
         
         Returns:
             output (list): A list containing sets for each hit [(title, url, highlights, favicon_url), ...]
