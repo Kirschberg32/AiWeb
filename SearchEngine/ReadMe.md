@@ -3,7 +3,9 @@ Search Engine by Eosandra Grund and Fabian Kirsch
 # Our Search Engine Gugel
 We created a Search Enginge for the course "Artificial Intelligence and the Web"(WS23/24). It consists of a [crawler](mylib/crawler.py), that can create a whoosh [Index](Index) (it is limited to crawling one server for time reasons), and a flask [app](gugel.py) that runs searches in the [Index](Index) using the class [index.Index](mylib/index.py). We also programmed an [update thread](mylib/updatedaemon.py), that regularly checks which entries are old and replaces them. It also checks whether there are new urls on the up to date page. 
 ![Example screenshot of page 2 of a search for the term "Studium". It shows that there where 94 matches. At the bottom of the results is a go back button to go the first page and a next page button.](Examples/ExampleSearch.png)
+Example screenshot of page 2 of a search for the term "Studium". It shows that there where 94 matches. At the bottom of the results is a go back button to go the first page and a next page button.
 ![Example screenshot of a search for the term "room". It shows that there where 4 matches, and suggests to search for "raum" instead.](Examples/ExampleCorrection.png)
+Example screenshot of a search for the term "room". It shows that there where 4 matches, and suggests to search for "raum" instead.
 
 
 ## Usage

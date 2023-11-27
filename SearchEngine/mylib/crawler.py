@@ -148,7 +148,7 @@ class Crawler:
         for l in soup.find_all("a"):
 
             # check if it is an linked image or does not contain an href
-            if (not l.find('img')):
+            if (not l.find('.img')) and (not l.find('.pdf')):
                 # print(l, "\n\n\n")
                 try: # try if href
                     link = l['href'] # get just the href part
