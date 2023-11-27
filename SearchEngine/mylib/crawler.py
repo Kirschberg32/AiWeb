@@ -2,6 +2,7 @@
 from urllib.parse import urljoin, urlparse
 import time
 from datetime import datetime, timedelta
+import os
 
 from mylib.myfunctions import get_page
 from mylib.index import Index
@@ -14,8 +15,10 @@ class Crawler:
         url_stack_same_server (list): a list containing all the found urls on the same server to visit next during crawling
         url_stack (list): a list of all urls found on different servers we want to visit (stays empty after the start_url is removed at the 
             moment because we only want to crawl one server)
-        urls_visited (list): a list with all the urls that where visited already by this crawler object
-        urls_to_visit_update (list): a list of urls to visit again next update
+        urls_visited (list): a list with all the urls that where visited already by this crawler object and where not relevant for the index
+        urls_visited_path (str):
+        urls_to_visit_update (list): a list of tuples of urls to visit again next update and the date when the url was found for the first time(saved in file when crawler is not running)
+        urls_to_visit_update_path (str): Where to save urls_to_visit_update
         url_stack_same_server_for_later (list): used during Crawler.crawl
         preliminary_index (list): A temporary database for index information before saving it in the whoosh index. Each element has the structure (soup (bs4.BeautifulSoup), url (string))
         custom_headers (dict): Used as the header for requests
@@ -24,7 +27,7 @@ class Crawler:
         scheme_list (list): A list containing all the url schemes we want to visit
     """
 
-    def __init__(self, name, index_path : str, start_url : str = "",timeout : int = 2):
+    def __init__(self, name, path : str, start_url : str = "",timeout : int = 2):
         """
 
         Args: 
@@ -38,13 +41,37 @@ class Crawler:
             self.url_stack = [start_url,] # only used when crawling different servers too
         else:
             self.url_stack = []
+
+        if not os.path.isdir("Crawler/" + path):
+            os.makedirs("Crawler/" + path)
+
+        self.urls_visited_path = "Crawler/" + path + "/urls_visited.txt"
         self.urls_visited = []
+        if os.path.isfile(self.urls_visited_path):
+            with open(self.urls_visited_path) as file:
+                for line in file:
+                    splitted = line.split(',')
+                    self.urls_visited.append((splitted[0],datetime.strptime(splitted[1],'%y-%m-%d %H:%M:%S')))
+        else:
+            with open(self.urls_visited_path, 'w') as file:
+                pass
+
+        # load from file if exists
+        # create folders if they do not exist
+        self.urls_to_visit_update_path = "Crawler/" + path + "/urls_to_visit_update.txt"
+        self.urls_to_visit_update = []
+        if os.path.isfile(self.urls_to_visit_update_path):
+            with open(self.urls_to_visit_update_path) as file:
+                for line in file:
+                    splitted = line.split(',')
+                    self.urls_to_visit_update.append((splitted[0],datetime.strptime(splitted[1],'%y-%m-%d %H:%M:%S')))
+
         self.urls_to_visit_update = []
         self.url_stack_same_server_for_later = []
 
         self.timeout_in_seconds = timeout
 
-        self.index = Index(name,index_path,timeout)
+        self.index = Index(name,"Index/" + path,timeout)
         self.preliminary_index = []
 
         # custom headers to indicate, that I am a crawler (politeness)
@@ -52,12 +79,26 @@ class Crawler:
 
         self.scheme_list = ["https", "http"] # requests only works with these
 
+    def save_urls_to_visit_update(self):
+        """
+        Writes self.urls_to_visit_update in a txt
+        """
+
+        if self.urls_to_visit_update:
+
+            list_to_save = [url + "," + date.strftime('%y-%m-%d %H:%M:%S') for url, date in self.urls_to_visit_update]
+
+            with open(self.urls_to_visit_update_path, 'w') as file:
+                file.writelines(list_to_save)
+                
+                    
     def __del__(self):
         """
         Saves the preliminary_index to the real index incase this object is destroyed before saving it itself.
         """
-        #if self.preliminary_index: # TODO make this code when lock is installed
-        self.pre_to_Index()
+        if self.preliminary_index:
+            self.pre_to_Index()
+        self.save_urls_to_visit_update()
 
     def append_same_server(self,url):
         """
@@ -211,6 +252,7 @@ class Crawler:
         # save rest for next index update
         date = datetime.utcnow()
         self.urls_to_visit_update.extend([(u,date) for u in self.urls_to_visit_update])
+        self.save_urls_to_visit_update()
 
         return counter
     
@@ -263,10 +305,12 @@ class Crawler:
             # update visited list
             # add errors and not html so they are not visited again. 
             self.urls_visited.append(next_url)
+            with open(self.urls_visited_path, 'a') as file:
+                file.writelines([next_url])
 
         return 0
 
-    def crawl_updates(self, age_in_days : int = 30):
+    def crawl_updates(self, age_in_days : int = 30, limit = 2000):
         """
         crawls pages again to get new information to make the index up to date
         https://docs.python.org/3/library/threading.html#rlock-objects
@@ -275,18 +319,21 @@ class Crawler:
             age_in_days (int): Information that is older than that will be updated
         """
 
-        urls_to_update = self.index.find_old(age_in_days)
-        urls_to_update.extend(self.urls_to_visit_update)
-        self.urls_to_visit_update = []
+        urls_to_update = []
+        limit_2 = int(limit/2)
+        if len(self.urls_to_visit_update) < (limit_2):
+            urls_to_update = self.index.find_old(age_in_days,int(limit-len(self.urls_to_visit_update)))
+            urls_to_update.extend(self.urls_to_visit_update)
+            self.urls_to_visit_update = []
+        else:
+            urls_to_update = self.index.find_old(age_in_days,(limit_2))
+            urls_to_update.extend(self.urls_to_visit_update[:limit_2])
+            self.urls_to_visit_update = self.urls_to_visit_update[limit_2:]
+
         self.empty_crawling_lists()
         self.url_stack = []
 
-        if len(urls_to_update) > 100:
-            pass
-            # save to hardware
-
         # TODO
-        # lock index
         # Welche listen mit URLs aus dem RAM wollen wir noch auf der Festplatte speichern?
 
         for next_url,next_date in urls_to_update:

@@ -303,7 +303,7 @@ class Index:
 
         return output
         
-    def find_old(self, age_in_days : int = 30):
+    def find_old(self, age_in_days : int = 30, limit = 1000):
         """
         Finds old entries in the index, that are older than age_in_days days
 
@@ -329,7 +329,7 @@ class Index:
             self.wish_and_wait()
             try:
                 with index.searcher() as searcher:
-                    results = searcher.search(query,limit=None) # do this in batches if working with more data using search_page
+                    results = searcher.search(query,limit=limit)
                     #print("Results in find_old: ", results)
                     output =  [(r["url"],r["date"]) for r in results]
                 done = True

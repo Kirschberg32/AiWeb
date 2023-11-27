@@ -25,10 +25,10 @@ v = website_dicts.uos
 #v = website_dicts.test
 
 # if you need to create a new index by crawling from the start page (same as main_create!)
-#Crawler(v["custom_header_name"], v["index_path"]).crawl(v["start_url"])
+#Crawler(v["custom_header_name"], v["path"]).crawl(v["start_url"])
 
 # create index for searching
-index = Index(v["custom_header_name"],v["index_path"])
+index = Index(v["custom_header_name"],v["path"])
 
 pagelen = 15
 

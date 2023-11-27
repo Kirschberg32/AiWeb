@@ -3,7 +3,7 @@ import threading
 import schedule
 import logging
 
-import mylib.crawler
+from mylib.crawler import Crawler
 
 # Logging
 logging.basicConfig(filename='gugel.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -44,13 +44,13 @@ class IndexUpdateDaemon(threading.Thread):
         """
         Runs the crawl_updates, is supposed to be run at the scheduled times. 
         """
-        print("daily_daemon_function is running")
-        mycrawler = crawler.Crawler(self.info_dict["custom_header_name"],self.info_dict["index_path"])
+        logger.info('Update Daemon started working routine')
+        mycrawler = Crawler(self.info_dict["custom_header_name"],self.info_dict["path"])
         mycrawler.crawl_updates()
-        print("daily_daemon_function ends")
+        logger.info('Update Daemon is done')
 
 def main():
-    import mylib.website_dicts
+    from mylib import website_dicts
     v = website_dicts.test
 
     IndexUpdateDaemon(v).start()
