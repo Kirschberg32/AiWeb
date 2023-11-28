@@ -78,7 +78,16 @@ def get_page(url, timeout_in_seconds, custom_headers, printing = False):
             print(f"An error occurred: {e}")
             return -1, None
 
-def create_logger(folder,filename,level, format = '%(asctime)s - %(levelname)s - %(message)s'):
+def create_logger(folder,filename,level = logging.DEBUG, format = '%(asctime)s - %(levelname)s - %(message)s'):
+    """
+    Create a logging object. 
+
+    Args:
+        folder (str): path for where to save the file
+        filename (str): 
+        level (int): Can be logging.DEBUG = 10, logging.INFO = 20, logging.WARNING = 30, logging.ERROR = 40, logging.CRITICAL = 50. All bigger than level will be logged
+        format (str): Format of the logging info. 
+    """
     #creating folder for logs if it does not exist
     if not os.path.exists(folder):
         os.makedirs(folder)
