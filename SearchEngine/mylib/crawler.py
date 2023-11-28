@@ -13,14 +13,14 @@ class Crawler:
     A crawler object that is able to crawl one server's html pages. 
 
     Attributes: 
-        url_stack_same_server (list): a list containing all the found urls on the same server to visit next during crawling
+        url_stack_same_server (list): a list containing all the found urls on the same server to visit next during crawling. contains tuples: (url (str), depth (int))
         url_stack (list): a list of all urls found on different servers we want to visit (stays empty after the start_url is removed at the 
             moment because we only want to crawl one server)
         urls_visited (list): a list with all the urls that where visited already by this crawler object and where not relevant for the index
         urls_visited_path (str):
         urls_to_visit_update (list): a list of tuples of urls to visit again next update and the date when the url was found for the first time(saved in file when crawler is not running)
         urls_to_visit_update_path (str): Where to save urls_to_visit_update
-        url_stack_same_server_for_later (list): used during Crawler.crawl
+        url_stack_same_server_for_later (list): used during Crawler.crawl. contains tuples: (url (str), depth (int))
         preliminary_index (list): A temporary database for index information before saving it in the whoosh index. Each element has the structure (soup (bs4.BeautifulSoup), url (string))
         custom_headers (dict): Used as the header for requests
         timeout_in_seconds (int): The timeout value, that can increase during myfunctions.get_page if the server is too slow (each time by 1). 
@@ -58,6 +58,8 @@ class Crawler:
         else:
             with open(self.urls_visited_path, 'w') as file:
                 pass
+
+        print(self.urls_visited[:10])
 
         # load from file if exists
         # create folders if they do not exist
@@ -103,17 +105,18 @@ class Crawler:
             self.pre_to_Index()
         self.save_urls_to_visit_update()
 
-    def append_same_server(self,url):
+    def append_same_server(self,url, depth):
         """
         Appends a new url to the same server list. Please check beforehand if it really is the same server. 
         It only checks whether the url already is in the list, whether it was already visited, or is in index or preliminary_index before appending it.
 
         Args:
             url (string): The url to append
+            depth (int): Will be increased by one
         """
 
         if (not url in self.url_stack_same_server) and (not url in self.url_stack_same_server_for_later) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
-            self.url_stack_same_server.append(url)
+            self.url_stack_same_server.append((url, depth + 1))
 
     def append_url(self,url):
         """
@@ -125,7 +128,7 @@ class Crawler:
         """
 
         if (not url in self.url_stack) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
-            self.url_stack_same_server.append(url)
+            self.url_stack_.append(url)
 
     def pre_to_Index(self):
         """
@@ -135,13 +138,14 @@ class Crawler:
         self.index.list_to_Index(self.preliminary_index)
         self.preliminary_index = []
     
-    def find_url(self,soup, original_url, original_url_parsed = None):
+    def find_url(self,soup, original_url, depth, original_url_parsed = None,):
         """
         Finds all urls in a given soup object
 
         Args:
             soup (bs4.BeautifulSoup): the data to search in
             original_url (string): the url where the data is from (used to create full urls from relative ones)
+            depth (int): 
             original_url_parsed (urllib.parse.ParseResult): the same url as in original_url but already parsed (if not given it is created)
         """
 
@@ -163,14 +167,14 @@ class Crawler:
 
                         # join original url with relative one
                         full_url = urljoin(original_url,link)
-                        self.append_same_server(full_url)
+                        self.append_same_server(full_url, depth)
 
                     # if not relative check whether kind of info we want
                     elif parsed_link.scheme in self.scheme_list:
 
                         # check whether it is from the same website
                         if parsed_link.netloc == original_url_parsed.netloc:
-                            self.append_same_server(link)
+                            self.append_same_server(link, depth)
                         else:
                             pass # because task is to crawl only one server
                             #self.append_url(link)
@@ -215,19 +219,19 @@ class Crawler:
 
         # self.url_stack_same_server = []
         if start_url:
-            self.url_stack_same_server.append(start_url)
+            self.url_stack_same_server.append((start_url,0))
         self.url_stack_same_server_for_later = [] # used so save urls where the server is too slow or returns 503 to check again later
 
         # while the stack is not empty
         while self.url_stack_same_server:
 
             # take and remove first url from list
-            next_url = self.url_stack_same_server.pop(-1)
+            next_url, depth = self.url_stack_same_server.pop(-1)
 
             # to not overwhelm the server wait before request again (politeness)
             time.sleep(self.timeout_in_seconds / 2)
 
-            counter += self.crawl_page(next_url,True, start,counter) # return 1 if added to index / preliminary index
+            counter += self.crawl_page(next_url, depth, True, start,counter) # return 1 if added to index / preliminary index
 
             if len(self.preliminary_index) >= batch:
                 self.pre_to_Index()
@@ -245,7 +249,7 @@ class Crawler:
             # to not overwhelm the server wait before request again (politeness)
             time.sleep(self.timeout_in_seconds / 2)
 
-            counter += self.crawl_page(True, next_url, start,counter) # return 1 if added to index / preliminary index
+            counter += self.crawl_page(True, next_url, depth, start,counter) # return 1 if added to index / preliminary index
 
             if len(self.preliminary_index) >= batch:
                 self.pre_to_Index()
@@ -254,17 +258,18 @@ class Crawler:
 
         # save rest for next index update
         date = datetime.utcnow()
-        self.urls_to_visit_update.extend([(u,date) for u in self.urls_to_visit_update])
+        self.urls_to_visit_update.extend([(u,date) for u,_ in self.url_stack_same_server_for_later])
         self.save_urls_to_visit_update()
 
         return counter
     
-    def crawl_page(self, next_url, printing = True, start = time.time(), counter = 0):
+    def crawl_page(self, next_url, depth, printing = True, start = time.time(), counter = 0):
         """
         Crawl one page. Used as the inner part of crawl
 
         Args:
             next_url (str): The url of the page to crawl
+            depth (int): 
             printing (bool): Whether to print some information in the terminal
             start (time.Time): The start time of the crawling algorithm, used to calculate running time for printing
             counter (int): Used for printing only. How many webpages where already visited
@@ -275,13 +280,13 @@ class Crawler:
 
         # print information
         if printing:
-            len_visited = len(self.urls_visited)
+            len_all_visited = len(self.urls_visited) + counter
             len_togo = len(self.url_stack_same_server) + len(self.url_stack_same_server_for_later)
-            if len_visited > 0:
-                time_estimation = ((time.time() - start ) /len_visited ) * len_togo
+            if len_all_visited > 0:
+                time_estimation = ((time.time() - start ) /len_all_visited) * len_togo
             else: 
                 time_estimation = self.timeout_in_seconds
-            print(f"Total: {len_visited + counter} from {len_visited+len_togo+ counter}; {self.convert_time(time.time() - start)}")
+            print(f"Total: {len_all_visited } from {len_all_visited+len_togo} of this server; {self.convert_time(time.time() - start)}")
             print(f"Estimated time left for {len_togo} pages: {self.convert_time(time_estimation)}")
 
         # if not visited recently
@@ -289,21 +294,22 @@ class Crawler:
 
         # get page
         code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers, True)
+        print("current depth: ", depth)
 
         if code == 1:
             # update index
             self.preliminary_index.append((soup,next_url))
             
             # finds all urls and saves the ones we want to visit in the future
-            self.find_url(soup,next_url,urlparse(next_url))
-            return 1
+            self.find_url(soup, next_url, depth, urlparse(next_url))
+            return 1 
         elif code == -1: # if the server is too slow
             if printing:
-                print("The server of: ", next_url, " is too slowly. Or 503")
+                print("The server of: ", next_url, " is too slowly.")
                 print("The crawler will stop to crawl this page now.")
-            self.url_stack_same_server_for_later.append(next_url)
+            self.url_stack_same_server_for_later.append((next_url, depth))
         elif code == 503:
-            self.url_stack_same_server_for_later.append(next_url)
+            self.url_stack_same_server_for_later.append(next_url, depth)
         else: # if 0 then the returns where not html or not ok code
             # update visited list
             # add errors and not html so they are not visited again. 
@@ -336,9 +342,6 @@ class Crawler:
         self.empty_crawling_lists()
         self.url_stack = []
 
-        # TODO
-        # Welche listen mit URLs aus dem RAM wollen wir noch auf der Festplatte speichern?
-
         for next_url,next_date in urls_to_update:
             print(f"Page: {next_url} is from {next_date.date()}")
             code, soup = get_page(next_url,self.timeout_in_seconds,self.custom_headers, True)
@@ -348,7 +351,7 @@ class Crawler:
                 self.index.update_index(next_url,soup)
                 
                 # finds all urls and saves the ones we want to visit in the future
-                self.find_url(soup,next_url,urlparse(next_url))
+                self.find_url(soup,next_url,0, urlparse(next_url))
                 
             elif code == -1: # if the server is too slow
 
@@ -368,7 +371,9 @@ class Crawler:
                     self.urls_to_visit_update.append((next_url,next_date))
             
             else: # if not html or just not working forget
-                self.urls_visited.append(next_url) # TODO speicher urls_visited auf festplatte
+                self.urls_visited.append(next_url)
+                with open(self.urls_visited_path, 'a') as file:
+                    file.writelines([next_url])
                 self.index.delete_from_index(next_url)
 
             # now do a quick crawl though the new urls that where found: 
