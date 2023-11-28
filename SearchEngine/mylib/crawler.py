@@ -54,12 +54,10 @@ class Crawler:
         if os.path.isfile(self.urls_visited_path):
             with open(self.urls_visited_path) as file:
                 for line in file:
-                    self.urls_visited.append(line)
+                    self.urls_visited.append(line.replace("\n", ""))
         else:
             with open(self.urls_visited_path, 'w') as file:
                 pass
-
-        print(self.urls_visited[:10])
 
         # load from file if exists
         # create folders if they do not exist
@@ -68,7 +66,7 @@ class Crawler:
         if os.path.isfile(self.urls_to_visit_update_path):
             with open(self.urls_to_visit_update_path) as file:
                 for line in file:
-                    splitted = line.split(',')
+                    splitted = line.replace("\n", "").split(',')
                     self.urls_to_visit_update.append((splitted[0],datetime.strptime(splitted[1],'%y-%m-%d %H:%M:%S')))
 
         self.urls_to_visit_update = []
@@ -91,7 +89,7 @@ class Crawler:
 
         if self.urls_to_visit_update:
 
-            list_to_save = [url + "," + date.strftime('%y-%m-%d %H:%M:%S') for url, date in self.urls_to_visit_update]
+            list_to_save = [url + "," + date.strftime('%y-%m-%d %H:%M:%S') + "\n" for url, date in self.urls_to_visit_update]
 
             with open(self.urls_to_visit_update_path, 'w') as file:
                 file.writelines(list_to_save)
@@ -115,8 +113,9 @@ class Crawler:
             depth (int): Will be increased by one
         """
 
-        if (not url in self.url_stack_same_server) and (not url in self.url_stack_same_server_for_later) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
-            self.url_stack_same_server.append((url, depth + 1))
+        if depth < 100: # depth limit
+            if (not url in self.url_stack_same_server) and (not url in self.url_stack_same_server_for_later) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
+                self.url_stack_same_server.append((url, depth + 1))
 
     def append_url(self,url):
         """
@@ -301,7 +300,8 @@ class Crawler:
             self.preliminary_index.append((soup,next_url))
             
             # finds all urls and saves the ones we want to visit in the future
-            self.find_url(soup, next_url, depth, urlparse(next_url))
+            if depth < 100: # depth limit, do not even search for more links
+                self.find_url(soup, next_url, depth, urlparse(next_url))
             return 1 
         elif code == -1: # if the server is too slow
             if printing:
@@ -315,7 +315,7 @@ class Crawler:
             # add errors and not html so they are not visited again. 
             self.urls_visited.append(next_url)
             with open(self.urls_visited_path, 'a') as file:
-                file.writelines([next_url])
+                file.write(next_url + "\n")
 
         return 0
 
@@ -331,12 +331,10 @@ class Crawler:
         urls_to_update = []
         limit_2 = int(limit/2)
         if len(self.urls_to_visit_update) < (limit_2):
-            urls_to_update = self.index.find_old(age_in_days,int(limit-len(self.urls_to_visit_update)))
-            urls_to_update.extend(self.urls_to_visit_update)
+            urls_to_update = self.urls_to_visit_update.copy() + self.index.find_old(age_in_days,int(limit-len(self.urls_to_visit_update)))
             self.urls_to_visit_update = []
         else:
-            urls_to_update = self.index.find_old(age_in_days,(limit_2))
-            urls_to_update.extend(self.urls_to_visit_update[:limit_2])
+            urls_to_update = self.urls_to_visit_update[:limit_2] + self.index.find_old(age_in_days,(limit_2))
             self.urls_to_visit_update = self.urls_to_visit_update[limit_2:]
 
         self.empty_crawling_lists()

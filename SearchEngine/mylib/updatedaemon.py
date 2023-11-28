@@ -48,15 +48,3 @@ class IndexUpdateDaemon(threading.Thread):
         mycrawler = Crawler(self.info_dict["custom_header_name"],self.info_dict["path"])
         mycrawler.crawl_updates()
         logger.info('Update Daemon is done')
-
-def main():
-    from mylib import website_dicts
-    v = website_dicts.test
-
-    IndexUpdateDaemon(v).start()
-
-    while True:
-        continue
-
-if __name__ == "__main__":
-    main()

@@ -22,10 +22,6 @@ app.secret_key = secrets.token_hex()
 # choose a website to use
 v = website_dicts.uos
 #v = website_dicts.test
-print()
-
-# if you need to create a new index by crawling from the start page (same as main_create!)
-#Crawler(v["custom_header_name"], v["path"]).crawl(v["start_url"])
 
 # create index for searching
 index = Index(v["custom_header_name"],"Index/" + v["path"])
@@ -34,7 +30,7 @@ pagelen = 15
 
 all_search_results_dict = {}
 
-IndexUpdateDaemon(v).start()
+IndexUpdateDaemon(v).start() # starts every day when the first request was sent.
 logger.info('Started Daemon')
 
 def prepare():
