@@ -10,11 +10,10 @@ import logging
 from mylib.index import Index
 from mylib import website_dicts
 from mylib.updatedaemon import IndexUpdateDaemon
-from mylib.myfunctions import thread_highlights
+from mylib.myfunctions import thread_highlights, create_logger
 
 # Logging
-logging.basicConfig(filename='gugel.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = create_logger(folder = 'logs',filename = 'gugel.log', level=logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s')
 logger.info('Start gugel engine')
 
 app = Flask(__name__, static_url_path='/static')
@@ -23,12 +22,13 @@ app.secret_key = secrets.token_hex()
 # choose a website to use
 v = website_dicts.uos
 #v = website_dicts.test
+print()
 
 # if you need to create a new index by crawling from the start page (same as main_create!)
 #Crawler(v["custom_header_name"], v["path"]).crawl(v["start_url"])
 
 # create index for searching
-index = Index(v["custom_header_name"],v["path"])
+index = Index(v["custom_header_name"],"Index/" + v["path"])
 
 pagelen = 15
 

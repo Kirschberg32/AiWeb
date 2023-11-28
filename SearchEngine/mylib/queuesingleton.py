@@ -3,9 +3,10 @@ import threading
 import time
 import logging
 
+from mylib.myfunctions import create_logger
+
 # Logging
-logging.basicConfig(filename='gugel.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+logger = create_logger(folder = 'logs',filename = 'gugel.log', level=logging.INFO, format = '%(asctime)s - %(levelname)s - %(message)s')
 
 class ThreadQueueSingleton(threading.Thread):
     """

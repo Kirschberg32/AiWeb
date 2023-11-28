@@ -1,5 +1,7 @@
 import time
 import requests
+import os
+import logging
 from bs4 import BeautifulSoup
 
 def thread_highlights(index, results, all_matches):
@@ -75,3 +77,14 @@ def get_page(url, timeout_in_seconds, custom_headers, printing = False):
         except requests.exceptions.RequestException as e:
             print(f"An error occurred: {e}")
             return -1, None
+
+def create_logger(folder,filename,level, format = '%(asctime)s - %(levelname)s - %(message)s'):
+    #creating folder for logs if it does not exist
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    log_file = os.path.join(folder, filename)
+    #Configurate logging
+    logging.basicConfig(filename=log_file, level=level, format=format)
+    #create logger object for current package
+    logger = logging.getLogger(__name__)
+    return logger

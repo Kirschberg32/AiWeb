@@ -3,6 +3,7 @@ from urllib.parse import urljoin, urlparse
 import time
 from datetime import datetime, timedelta
 import os
+import re
 
 from mylib.myfunctions import get_page
 from mylib.index import Index
@@ -36,6 +37,9 @@ class Crawler:
             timeout (int): The default value for timeout to reset timeout when switching to crawl a different server
         """
 
+        #pattern to exclude in find_url
+        self.find_re = re.compile(r'.*\.(img|jpg|png|pdf)|.*#.*$')
+        
         self.url_stack_same_server = []
         if start_url:
             self.url_stack = [start_url,] # only used when crawling different servers too
@@ -148,7 +152,7 @@ class Crawler:
         for l in soup.find_all("a"):
 
             # check if it is an linked image or does not contain an href
-            if (not l.find('.img')) and (not l.find('.pdf')):
+            if not self.find_re.search(l.get('href', '')):
                 # print(l, "\n\n\n")
                 try: # try if href
                     link = l['href'] # get just the href part
