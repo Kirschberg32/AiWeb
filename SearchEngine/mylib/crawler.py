@@ -114,7 +114,7 @@ class Crawler:
         """
 
         if depth < 100: # depth limit
-            if (not url in self.url_stack_same_server) and (not url in self.url_stack_same_server_for_later) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
+            if (all(url != tpl[0] for tpl in self.url_stack_same_server)) and (all(url != tpl[0] for tpl in self.url_stack_same_server_for_later)) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (all(url != tpl[0] for tpl in self.urls_to_visit_update)) and (not self.index.is_in_index(url)):
                 self.url_stack_same_server.append((url, depth + 1))
 
     def append_url(self,url):
@@ -126,7 +126,7 @@ class Crawler:
             url (string): The url to append
         """
 
-        if (not url in self.url_stack) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (not url in self.urls_to_visit_update) and (not self.index.is_in_index(url)):
+        if (not url in self.url_stack) and (not url in self.urls_visited) and (not self.is_in_preliminary(url)) and (url != tpl[0] for tpl in  self.urls_to_visit_update) and (not self.index.is_in_index(url)):
             self.url_stack_.append(url)
 
     def pre_to_Index(self):
@@ -309,7 +309,7 @@ class Crawler:
                 print("The crawler will stop to crawl this page now.")
             self.url_stack_same_server_for_later.append((next_url, depth))
         elif code == 503:
-            self.url_stack_same_server_for_later.append(next_url, depth)
+            self.url_stack_same_server_for_later.append((next_url, depth))
         else: # if 0 then the returns where not html or not ok code
             # update visited list
             # add errors and not html so they are not visited again. 
