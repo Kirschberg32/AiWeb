@@ -2,7 +2,6 @@
 
 import os
 import re
-import random
 import time
 from datetime import datetime, timedelta
 from concurrent import futures
@@ -48,8 +47,6 @@ class Index:
 
         self.queue_thread = ThreadQueueSingleton.get_instance()
         self.wish_granted = False # changed in 
-
-        self.timeline = 30
 
     # the following methods are used for queue.PriorityQueue. They make instances of Index comparable
 
@@ -109,7 +106,7 @@ class Index:
         # if there is no existing index create a new one
         if not exists_in(self.index_path):
             # stored content to do easy highlights
-            schema = Schema(title=TEXT(stored=True), content=TEXT, url=ID(stored=True), date=DATETIME(stored=True))
+            schema = Schema(title=TEXT(stored=True), content=TEXT, url=ID(stored=True), date=DATETIME(stored=True, sortable=True))
             index = create_in(self.index_path, schema)
         else:
             # open the existing index
@@ -134,7 +131,7 @@ class Index:
             self.wish_and_wait()
             try:
                 with index.writer() as writer:
-                    writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,self.timeline)))
+                    writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date)
                     done = True
             except LockError:
                 done = False
@@ -162,7 +159,7 @@ class Index:
                 # automatically committed and closed writer
                 with index.writer() as writer:
                     for soup, url in input_list:
-                        writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date - timedelta(days = random.randint(0,self.timeline)))
+                        writer.add_document(title=soup.title.text, content=soup.text, url=url, date=date)
                 self.preliminary_index = []
                 done = True
             except LockError:
@@ -329,7 +326,7 @@ class Index:
             self.wish_and_wait()
             try:
                 with index.searcher() as searcher:
-                    results = searcher.search(query,limit=limit)
+                    results = searcher.search(query,limit=limit, sortedby = "date")
                     #print("Results in find_old: ", results)
                     output =  [(r["url"],r["date"]) for r in results]
                 done = True
@@ -339,6 +336,8 @@ class Index:
             finally:
                 self.wish_granted = False
 
+        for _,date in output:
+            print(date)
         return output
     
     def find_favicon(self, url,soup):

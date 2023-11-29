@@ -38,7 +38,7 @@ class Crawler:
         """
 
         #pattern to exclude in find_url
-        self.find_re = re.compile(r'.*\.(img|jpg|png|pdf)|.*#.*$')
+        self.find_re = re.compile(r'.*\.(img|jpg|png|pdf)')
         
         self.url_stack_same_server = []
         if start_url:
@@ -159,7 +159,7 @@ class Crawler:
                 # print(l, "\n\n\n")
                 try: # try if href
                     link = l['href'] # get just the href part
-                    parsed_link = urlparse(link)
+                    parsed_link = urlparse(link, allow_fragments=False)
 
                     # check wether the link is a relative link
                     if (not parsed_link.scheme) and (not parsed_link.netloc):
@@ -173,10 +173,10 @@ class Crawler:
 
                         # check whether it is from the same website
                         if parsed_link.netloc == original_url_parsed.netloc:
-                            self.append_same_server(link, depth)
+                            self.append_same_server(parsed_link.geturl(), depth)
                         else:
                             pass # because task is to crawl only one server
-                            #self.append_url(link)
+                            #self.append_url(parsed_link.geturl())
 
                 except KeyError as e:
                     # does not have an href
