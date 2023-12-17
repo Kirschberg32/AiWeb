@@ -4,8 +4,8 @@
     <h2>Movies</h2>
 
     {% for m in movies %}
-        <div class="panel panel-default">
-            <div class="panel-heading"><b><a href = "{{m.link[0].link}}" >{{ m.title }}</a></b></div>
+        <div id="movie_{{ m.id }}" class="panel panel-default">
+            <div class="panel-heading"><b><a href = "{{m.links[0].link}}" >{{ m.title }}</a></b></div>
             <div class="panel-body">
                 <p>
                     <b>Genres: </b>
@@ -20,13 +20,16 @@
                     {% endfor %}
                 </p>
             </div>
-              <div class="panel-footer">Rate:
-                  <a href="#" class="card-link">1</a>
-                  <a href="#" class="card-link">2</a>
-                  <a href="#" class="card-link">3</a>
-                  <a href="#" class="card-link">4</a>
-                  <a href="#" class="card-link">5</a> Stars
-              </div>
+            <div class="panel-footer">
+                Rate:
+                <div class="star_container">
+                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
+                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
+                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
+                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
+                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
+                </div>
+            </div>
         </div>
     {% endfor %}
 </div>

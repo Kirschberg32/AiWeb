@@ -48,7 +48,7 @@ def home_page():
 
 # The Members page is only accessible to authenticated users via the @login_required decorator
 @app.route('/movies')
-@login_required  # User must be authenticated
+#@login_required  # User must be authenticated
 def movies_page():
     # String-based templates
 
@@ -58,7 +58,7 @@ def movies_page():
     print(type(movies))
 
     for m in movies:
-        print(m.title, m.link[0].link)
+        print(m.title, m.links[0].link)
 
     # only Romance movies
     # movies = Movie.query.filter(Movie.genres.any(MovieGenre.genre == 'Romance')).limit(10).all()

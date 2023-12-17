@@ -1,0 +1,45 @@
+hr {
+    border-color: #cccccc;
+    margin: 0;
+}
+  
+.no-margins {
+    margin: 0px;
+}
+  
+.with-margins {
+    margin: 10px;
+}
+  
+.col-centered {
+    float: none;
+    margin: 0 auto;
+}
+
+.panel-footer a{
+    line-height: 20px;
+    vertical-align: middle;
+}
+
+.star_container{
+    display: inline-block;
+    direction: rtl;
+}
+
+.card-link{
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-size: cover;
+    cursor: pointer;
+    background-image: url('images/star_empty.png');
+    
+}
+
+.card-link.filled,
+.card-link:hover,
+.card-link:hover ~ .card-link {
+    background-image: url('images/star_full.png');
+}
+
+
