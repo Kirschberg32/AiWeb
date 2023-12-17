@@ -26,7 +26,8 @@ class Movie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100, collation='NOCASE'), nullable=False, unique=True)
     genres = db.relationship('MovieGenre', backref='movie', lazy=True)
-
+    links = db.relationship('MovieLink', backref='movie', lazy=True)
+    tags = db.relationship('MovieTag', backref='movie', lazy=True)
 
 class MovieGenre(db.Model):
     __tablename__ = 'movie_genres'
@@ -34,3 +35,14 @@ class MovieGenre(db.Model):
     movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
     genre = db.Column(db.String(255), nullable=False, server_default='')
 
+class MovieLink(db.Model):
+    __tablename__ = 'movie_link'
+    id = db.Column(db.Integer, primary_key=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
+    link = db.Column(db.String(255), nullable=False, server_default='')
+
+class MovieTag(db.Model):
+    __tablename__ = 'movie_tag'
+    id = db.Column(db.Integer, primary_key=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
+    tag = db.Column(db.String(255), nullable=False, server_default='')

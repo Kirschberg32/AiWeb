@@ -5,11 +5,18 @@
 
     {% for m in movies %}
         <div class="panel panel-default">
-            <div class="panel-heading"><b>{{ m.title }}</b></div>
+            <div class="panel-heading"><b><a href = "{{m.link[0].link}}" >{{ m.title }}</a></b></div>
             <div class="panel-body">
                 <p>
+                    <b>Genres: </b>
                     {% for g in m.genres %}
                         <span class="label label-default">{{ g.genre }}</span>
+                    {% endfor %}
+                </p>
+                <p>
+                    <b>User tags: </b>
+                    {% for t in m.tags %}
+                        <span class="label label-default">{{ t.tag }}</span>
                     {% endfor %}
                 </p>
             </div>

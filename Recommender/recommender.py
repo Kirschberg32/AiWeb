@@ -55,6 +55,11 @@ def movies_page():
     # first 10 movies
     movies = Movie.query.limit(10).all()
 
+    print(type(movies))
+
+    for m in movies:
+        print(m.title, m.link[0].link)
+
     # only Romance movies
     # movies = Movie.query.filter(Movie.genres.any(MovieGenre.genre == 'Romance')).limit(10).all()
 

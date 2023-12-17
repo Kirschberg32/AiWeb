@@ -1,0 +1,29 @@
+Ideas:
+
+- movies_page algorithm improved
+- alte Bewertungen sind ersichtlich
+
+- recommender bevor bewertungen geben gibt generell beste Filme
+- recommender und suche
+
+- when creating data make sure id movie and link is the same
+
+- sorting tags list before searching for matching tags
+
+- Server Error when delete data but browser still remembers. 
+
+Week 1:
+
+Week 2: 
+- create model for ratings
+- extend read_data to read ratings.csv
+- create user objects for users in ratings
+
+- decide on recommender algorithm
+- create functions for comparing
+- sorting movies
+- test 
+
+- let user be able to rate
+
+- display recommondations for the user
