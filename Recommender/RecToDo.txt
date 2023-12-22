@@ -15,9 +15,8 @@ Ideas:
 Week 1:
 
 Week 2: 
-- create model for ratings
-- extend read_data to read ratings.csv
-- create user objects for users in ratings
+
+Week 3:
 
 - decide on recommender algorithm
 - create functions for comparing

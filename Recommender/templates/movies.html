@@ -29,6 +29,7 @@
                     <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
                     <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
                 </div>
+                <p style="text-align: right;"> Average User Rating: {{ m.average_ratings() }} </p>
             </div>
         </div>
     {% endfor %}

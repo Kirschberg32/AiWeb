@@ -20,6 +20,8 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(100, collation='NOCASE'), nullable=False, server_default='')
     last_name = db.Column(db.String(100, collation='NOCASE'), nullable=False, server_default='')
 
+    # contact to moviedata
+    ratings = db.relationship('MovieRating', backref='user', lazy=True)
 
 class Movie(db.Model):
     __tablename__ = 'movies'
@@ -28,6 +30,13 @@ class Movie(db.Model):
     genres = db.relationship('MovieGenre', backref='movie', lazy=True)
     links = db.relationship('MovieLink', backref='movie', lazy=True)
     tags = db.relationship('MovieTag', backref='movie', lazy=True)
+    ratings = db.relationship('MovieRating', backref='movie', lazy=True)
+
+    def average_ratings(self):
+        """ returns the average rating for this movie rounded. 0.0 if no rating."""
+        if len(self.ratings) > 0:
+            return round(sum([rating.rating for rating in self.ratings])/(len(self.ratings)),1)
+        return 0.0
 
 class MovieGenre(db.Model):
     __tablename__ = 'movie_genres'
@@ -46,3 +55,10 @@ class MovieTag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False)
     tag = db.Column(db.String(255), nullable=False, server_default='')
+
+class MovieRating(db.Model):
+    __tablename__ = 'movie_rating'
+    id = db.Column(db.Float)
+    movie_id = db.Column(db.Integer, db.ForeignKey('movies.id'), nullable=False, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False, server_default='')
+    user_id = db.Column(db.Integer, db.ForeignKey('users.username'), nullable=False, primary_key = True)

@@ -3,7 +3,7 @@
 from flask import Flask, render_template
 from flask_user import login_required, UserManager
 
-from models import db, User, Movie, MovieGenre
+from models import db, User, Movie, MovieRating
 from read_data import check_and_read_data
 
 # Class-based application configuration
@@ -52,13 +52,13 @@ def home_page():
 def movies_page():
     # String-based templates
 
+    print(user_manager)
+
     # first 10 movies
     movies = Movie.query.limit(10).all()
 
-    print(type(movies))
-
     for m in movies:
-        print(m.title, m.links[0].link)
+        print(m.title, len(m.ratings))
 
     # only Romance movies
     # movies = Movie.query.filter(Movie.genres.any(MovieGenre.genre == 'Romance')).limit(10).all()
