@@ -1,6 +1,6 @@
 # Contains parts from: https://flask-user.readthedocs.io/en/latest/quickstart_app.html
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_user import login_required, UserManager
 
 from models import db, User, Movie, MovieRating
@@ -47,18 +47,23 @@ def home_page():
 
 
 # The Members page is only accessible to authenticated users via the @login_required decorator
-@app.route('/movies')
+@app.route('/movies', methods=['GET', 'POST'])
 #@login_required  # User must be authenticated
 def movies_page():
     # String-based templates
+    if request.method == 'POST':
+        rating = request.form.get('rating')
+        #Safe it to Database
+        print('Received rating:', rating)
 
-    print(user_manager)
+
+    #print(user_manager)
 
     # first 10 movies
     movies = Movie.query.limit(10).all()
 
-    for m in movies:
-        print(m.title, len(m.ratings))
+    #for m in movies:
+    #    print(m.title, len(m.ratings))
 
     # only Romance movies
     # movies = Movie.query.filter(Movie.genres.any(MovieGenre.genre == 'Romance')).limit(10).all()

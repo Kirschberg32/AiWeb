@@ -22,13 +22,15 @@
             </div>
             <div class="panel-footer">
                 Rate:
-                <div class="star_container">
-                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
-                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
-                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
-                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
-                    <a href="#movie_{{ m.id }}" class="card-link {% if is_star_filled %}filled{% endif %}"></a>
-                </div>
+                <form action="/movies" method="POST">
+                    <div class="star_container">
+                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="5"></button>
+                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="4"></button>
+                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="3"></button>
+                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="2"></button>
+                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="1"></button>
+                    </div>
+                </form>
                 <p style="text-align: right;"> Average User Rating: {{ m.average_ratings() }} </p>
             </div>
         </div>
