@@ -129,7 +129,7 @@ def check_and_read_ratings(db):
 
                 try:
 
-                    movie_rating = MovieRating(movie_id=rating[1],rating=rating[2],user_id=rating[0])
+                    movie_rating = MovieRating(movie_id=rating[1],rating=rating[2],user_id="database" + rating[0])
                     db.session.add(movie_rating)
 
                     db.session.commit()

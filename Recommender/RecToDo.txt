@@ -18,11 +18,8 @@ Week 2:
 
 Week 3:
 
-- decide on recommender algorithm
 - create functions for comparing
 - sorting movies
 - test 
-
-- let user be able to rate
 
 - display recommondations for the user

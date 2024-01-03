@@ -3,7 +3,7 @@
 <div class="container">
     <h2>Movies</h2>
 
-    {% for m in movies %}
+    {% for m, r in movies %}
         <div id="movie_{{ m.id }}" class="panel panel-default">
             <div class="panel-heading"><b><a href = "{{m.links[0].link}}" >{{ m.title }}</a></b></div>
             <div class="panel-body">
@@ -24,11 +24,11 @@
                 Rate:
                 <form action="/movies" method="POST">
                     <div class="star_container">
-                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="5"></button>
-                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="4"></button>
-                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="3"></button>
-                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="2"></button>
-                        <button type="hidden" class="card-link {% if is_star_filled %}filled{% endif %}" name="rating" value="1"></button>
+                        <button type="hidden" class="card-link {% if r > 4 %}filled{% endif %}" name="rating" value="{{m.id}},5"></button>
+                        <button type="hidden" class="card-link {% if r > 3 %}filled{% endif %}" name="rating" value="{{m.id}},4"></button>
+                        <button type="hidden" class="card-link {% if r > 2 %}filled{% endif %}" name="rating" value="{{m.id}},3"></button>
+                        <button type="hidden" class="card-link {% if r > 1 %}filled{% endif %}" name="rating" value="{{m.id}},2"></button>
+                        <button type="hidden" class="card-link {% if r > 0 %}filled{% endif %}" name="rating" value="{{m.id}},1"></button>
                     </div>
                 </form>
                 <p style="text-align: right;"> Average User Rating: {{ m.average_ratings() }} </p>

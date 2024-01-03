@@ -1,7 +1,8 @@
 # Contains parts from: https://flask-user.readthedocs.io/en/latest/quickstart_app.html
 
 from flask import Flask, render_template, request
-from flask_user import login_required, UserManager
+from flask_user import login_required, UserManager, current_user
+from sqlalchemy.exc import IntegrityError
 
 from models import db, User, Movie, MovieRating
 from read_data import check_and_read_data
@@ -31,7 +32,6 @@ db.init_app(app)  # initialize database
 db.create_all()  # create database if necessary
 user_manager = UserManager(app, db, User)  # initialize Flask-User management
 
-
 @app.cli.command('initdb')
 def initdb_command():
     global db
@@ -48,16 +48,31 @@ def home_page():
 
 # The Members page is only accessible to authenticated users via the @login_required decorator
 @app.route('/movies', methods=['GET', 'POST'])
-#@login_required  # User must be authenticated
+@login_required  # User must be authenticated
 def movies_page():
+
     # String-based templates
     if request.method == 'POST':
-        rating = request.form.get('rating')
-        #Safe it to Database
-        print('Received rating:', rating)
+        movie_id, rating = request.form.get('rating').split(",")
 
+        # check whether user already rated this movie
+        rated = current_user.get_rating(int(movie_id), False)
 
-    #print(user_manager)
+        try:
+            if rated != 0: # change rating
+                if rated.rating == int(rating): # delete rating
+                    db.session.delete(rated)
+                else:
+                    rated.rating = rating
+
+            if rated == 0:
+                #Safe it to Database
+                movie_rating = MovieRating(movie_id=int(movie_id),rating=int(rating),user_id=current_user.username)
+                db.session.add(movie_rating)
+
+            db.session.commit()
+        except IntegrityError:
+            pass
 
     # first 10 movies
     movies = Movie.query.limit(10).all()
@@ -74,7 +89,10 @@ def movies_page():
     #     .filter(Movie.genres.any(MovieGenre.genre == 'Horror')) \
     #     .limit(10).all()
 
-    return render_template("movies.html", movies=movies)
+    # check which movies are rated by the user
+    ratings = [current_user.get_rating(m.id,True) for m in movies] # 0 for no rating
+
+    return render_template("movies.html", movies = zip(movies,ratings))
 
 
 # Start development web server

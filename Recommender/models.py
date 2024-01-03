@@ -23,6 +23,14 @@ class User(db.Model, UserMixin):
     # contact to moviedata
     ratings = db.relationship('MovieRating', backref='user', lazy=True)
 
+    def get_rating(self, movie_id, as_num = True):
+        for r in self.ratings:
+            if r.movie_id == movie_id:
+                if as_num:
+                    return r.rating
+                return r
+        return 0
+
 class Movie(db.Model):
     __tablename__ = 'movies'
     id = db.Column(db.Integer, primary_key=True)
