@@ -1,7 +1,6 @@
 Ideas:
 
 - movies_page algorithm improved
-- alte Bewertungen sind ersichtlich
 
 - recommender bevor bewertungen geben gibt generell beste Filme
 - recommender und suche
@@ -12,14 +11,14 @@ Ideas:
 
 - Server Error when delete data but browser still remembers. 
 
+- if not rated yet show best movies from each genre
+
 Week 1:
 
 Week 2: 
 
 Week 3:
 
-- create functions for comparing
-- sorting movies
 - test 
 
 - display recommondations for the user

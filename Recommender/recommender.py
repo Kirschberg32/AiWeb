@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from models import db, User, Movie, MovieRating
 from read_data import check_and_read_data
+from algorithm import recommender_algorithm
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -76,6 +77,11 @@ def movies_page():
 
     # first 10 movies
     movies = Movie.query.limit(10).all()
+
+    result = recommender_algorithm(current_user.username)
+    print(result)
+
+    #recommender_algorithm(current_user.username)
 
     #for m in movies:
     #    print(m.title, len(m.ratings))
