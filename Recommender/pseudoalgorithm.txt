@@ -1,0 +1,17 @@
+user-centered mehr personalisiert
+
+for a given user:
+ 	find similar users based on rated movies
+
+	for all not rated movies derive prediction from ratings of similar users
+
+	sort predictions
+
+
+
+
+index | movie_id | username 1 | username 2 | ...
+
+1     | 9869869  |   3        |   0        | ... 
+
+...

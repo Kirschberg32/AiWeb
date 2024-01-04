@@ -33,8 +33,8 @@ class User(db.Model, UserMixin):
 
 class Movie(db.Model):
     __tablename__ = 'movies'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100, collation='NOCASE'), nullable=False, unique=True)
+    id = db.Column(db.Integer, primary_key=True, unique=True)
+    title = db.Column(db.String(100, collation='NOCASE'), nullable=False)
     genres = db.relationship('MovieGenre', backref='movie', lazy=True)
     links = db.relationship('MovieLink', backref='movie', lazy=True)
     tags = db.relationship('MovieTag', backref='movie', lazy=True)

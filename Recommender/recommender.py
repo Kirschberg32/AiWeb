@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from models import db, User, Movie, MovieRating
 from read_data import check_and_read_data
-from algorithm import recommender_algorithm
+from algorithm import RecommenderAlgorithm as Rec
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -32,6 +32,9 @@ app.app_context().push()  # create an app context before initializing db
 db.init_app(app)  # initialize database
 db.create_all()  # create database if necessary
 user_manager = UserManager(app, db, User)  # initialize Flask-User management
+
+# Create the matrix used to calculate the recommendations
+Rec.create_df_matrix()
 
 @app.cli.command('initdb')
 def initdb_command():
@@ -63,6 +66,7 @@ def movies_page():
             if rated != 0: # change rating
                 if rated.rating == int(rating): # delete rating
                     db.session.delete(rated)
+                    rating = 0
                 else:
                     rated.rating = rating
 
@@ -75,13 +79,25 @@ def movies_page():
         except IntegrityError:
             pass
 
+
+        # save to matrix for algorithm
+        Rec.add_rating(current_user.username, int(movie_id), int(rating))
+
+    # 86880
+    # 53125
+
     # first 10 movies
-    movies = Movie.query.limit(10).all()
+    #movies = Movie.query.limit(10).all()
 
-    result = recommender_algorithm(current_user.username)
-    print(result)
+    result = Rec.recommend(current_user.username)
+    show = result
+    if len(result) > 10:
+        show = result[:10] # only show first 10
+    
+    print(show)
 
-    #recommender_algorithm(current_user.username)
+    # get the objects of the movies
+    movies = Movie.query.filter(Movie.id.in_(show)).all()
 
     #for m in movies:
     #    print(m.title, len(m.ratings))

@@ -2,23 +2,20 @@ Ideas:
 
 - movies_page algorithm improved
 
-- recommender bevor bewertungen geben gibt generell beste Filme
-- recommender und suche
-
-- when creating data make sure id movie and link is the same
-
-- sorting tags list before searching for matching tags
-
 - Server Error when delete data but browser still remembers. 
 
-- if not rated yet show best movies from each genre
+- Page with rated movies
 
-Week 1:
-
-Week 2: 
 
 Week 3:
 
 - test 
 
-- display recommondations for the user
+
+Fehlermeldungen: 
+
+(trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\Documents\AIWEBProjects\aiwebenv\lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+AttributeError: module 'bcrypt' has no attribute '__about__'
