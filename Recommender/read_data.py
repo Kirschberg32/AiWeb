@@ -7,7 +7,7 @@ def check_and_read_data(db):
     # read data if database is empty
     if Movie.query.count() == 0:
         check_and_read_ratings(db)
-        #check_and_read_tags(db)
+        check_and_read_tags(db)
         check_and_read_movie_and_link(db)
 
 def check_and_read_movie_and_link(db):
@@ -102,7 +102,7 @@ def check_and_read_tags(db):
 def check_and_read_ratings(db):
     print("Now reading ratings.")
     #read ratings from csv
-    with open('data/ratings_short.csv', newline='', encoding='utf8') as file: #TODO short for testing
+    with open('data/ratings.csv', newline='', encoding='utf8') as file: #TODO short for testing
         reader = csv.reader(file, delimiter=',')
 
         user_counter = 0
