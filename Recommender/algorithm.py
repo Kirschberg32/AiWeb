@@ -15,10 +15,9 @@ class RecommenderAlgorithm:
                'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']
     
     # _best_recommendations = [] # to calculate new each start with current data
-    #_best_recommendations = [318, 356, 296, 2571, 593, 260, 110, 2959, 527, 480, 
-                             #1196, 589, 50, 1, 2858, 4993, 1210, 47, 2028, 7153, 457, 608, 
-                             #2762, 588, 364, 4306, 590, 380, 1214, 595, 1073, 1617, 32587, 1201, 5669, 8464]
-    _best_recommendations = [53125, 86880]
+    _best_recommendations = [318, 356, 296, 2571, 593, 260, 110, 2959, 527, 480, 
+                             1196, 589, 50, 1, 2858, 4993, 1210, 47, 2028, 7153, 457, 608, 
+                             2762, 588, 364, 4306, 590, 380, 1214, 595, 1073, 1617, 32587, 1201, 5669, 8464]
 
     @classmethod
     def create_df_matrix(cls): # user x movies
@@ -68,8 +67,8 @@ class RecommenderAlgorithm:
         if username not in cls._dframe_matrix.columns: # User is added when he rates something
             cls.add_user(username)
         cls._dframe_matrix.loc[movie_id, username] = rating
-        print("Added rating for", username, movie_id)
-        print(cls._dframe_matrix)
+        #print("Added rating for", username, movie_id)
+        #print(cls._dframe_matrix)
 
     @classmethod
     def recommend(cls, username):

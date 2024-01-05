@@ -2,6 +2,7 @@
 {% block content %}
 <div class="container">
     <h2>Movies</h2>
+    <p><a href="/{{path_to_follow}}">Reset</a> </p>
 
     {% for m, r in movies %}
         <div id="movie_{{ m.id }}" class="panel panel-default">
@@ -22,7 +23,7 @@
             </div>
             <div class="panel-footer">
                 Rate:
-                <form action="/movies" method="POST">
+                <form action="/{{path_to_follow}}" method="POST">
                     <div class="star_container">
                         <button type="hidden" class="card-link {% if r > 4 %}filled{% endif %}" name="rating" value="{{m.id}},5"></button>
                         <button type="hidden" class="card-link {% if r > 3 %}filled{% endif %}" name="rating" value="{{m.id}},4"></button>
@@ -36,7 +37,7 @@
         </div>
     {% endfor %}
 
-    <form action="/movies" method="POST">
+    <form action="/{{path_to_follow}}" method="POST">
         <button href ="#{{movies[page*10]}}" type="submit" name="load_more" value="{{page + 1}}">Load More</button>
     </form>
 
