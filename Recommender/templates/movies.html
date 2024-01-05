@@ -35,17 +35,11 @@
             </div>
         </div>
     {% endfor %}
-    {{ movies|list|length }}
-    {% if page*10 < movies|list|length %}
+
     <form action="/movies" method="POST">
-        <button type="submit" name="inc_page" value="{{page + 1}}">Page {{page + 2}} </button>
+        <button href ="#{{movies[page*10]}}" type="submit" name="load_more" value="{{page + 1}}">Load More</button>
     </form>
-    {% endif %}
-    {% if page > 1 %}
-    <form action="/movies" method="POST">
-        <button type="submit" name="inc_page" value="{{page - 1}}">Page {{page - 1}} </button>
-    </form>
-    {% endif %}
+
 </div>
 
 {% endblock %}

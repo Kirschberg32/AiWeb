@@ -33,6 +33,9 @@ db.init_app(app)  # initialize database
 db.create_all()  # create database if necessary
 user_manager = UserManager(app, db, User)  # initialize Flask-User management
 page = 0
+is_loaded = False
+movies = []
+result = []
 
 # Create the matrix used to calculate the recommendations
 Rec.create_df_matrix()
@@ -48,8 +51,12 @@ def initdb_command():
 @app.route('/')
 def home_page():
     global page
+    global is_loaded
+    global movies
     # render home.html template
     page = 0
+    is_loaded = False
+    movies = []
     return render_template("home.html")
 
 
@@ -58,6 +65,9 @@ def home_page():
 @login_required  # User must be authenticated
 def movies_page():
     global page
+    global is_loaded
+    global movies
+    global result
 
     # String-based templates
     if request.method == 'POST':
@@ -83,28 +93,32 @@ def movies_page():
                 db.session.commit()
             except IntegrityError:
                 pass
-        elif 'inc_page' in request.form:
-            page = request.form.get('inc_page')
+            # save to matrix for algorithm
+            Rec.add_rating(current_user.username, int(movie_id), int(rating))
+
+        elif 'load_more' in request.form:
+            page = int(request.form.get('load_more'))
+            is_loaded = True
             
 
-        # save to matrix for algorithm
-        Rec.add_rating(current_user.username, int(movie_id), int(rating))
+        
 
     # 86880
     # 53125
 
     # first 10 movies
     #movies = Movie.query.limit(10).all()
-
-    result = Rec.recommend(current_user.username)
+    if not is_loaded:
+        result = Rec.recommend(current_user.username)
     show = result
-    if len(result) > 10:
+    if len(result) > 10*page:
         show = result[(10*page):((10*page)+10)] # show 10 per page
-    
+        
     print(show)
 
     # get the objects of the movies
-    movies = Movie.query.filter(Movie.id.in_(show)).all()
+    print(movies)
+    movies.extend(Movie.query.filter(Movie.id.in_(show)).all())
 
     #for m in movies:
     #    print(m.title, len(m.ratings))
