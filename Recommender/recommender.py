@@ -32,13 +32,14 @@ app.app_context().push()  # create an app context before initializing db
 db.init_app(app)  # initialize database
 db.create_all()  # create database if necessary
 user_manager = UserManager(app, db, User)  # initialize Flask-User management
+page = 0
 
 # Create the matrix used to calculate the recommendations
 Rec.create_df_matrix()
 
 @app.cli.command('initdb')
 def initdb_command():
-    global db
+    global db 
     """Creates the database tables."""
     check_and_read_data(db)
     print('Initialized the database.')
@@ -46,7 +47,9 @@ def initdb_command():
 # The Home page is accessible to anyone
 @app.route('/')
 def home_page():
+    global page
     # render home.html template
+    page = 0
     return render_template("home.html")
 
 
@@ -54,31 +57,35 @@ def home_page():
 @app.route('/movies', methods=['GET', 'POST'])
 @login_required  # User must be authenticated
 def movies_page():
+    global page
 
     # String-based templates
     if request.method == 'POST':
-        movie_id, rating = request.form.get('rating').split(",")
+        if 'rating' in request.form:
+            movie_id, rating = request.form.get('rating').split(",")
 
-        # check whether user already rated this movie
-        rated = current_user.get_rating(int(movie_id), False)
+            # check whether user already rated this movie
+            rated = current_user.get_rating(int(movie_id), False)
 
-        try:
-            if rated != 0: # change rating
-                if rated.rating == int(rating): # delete rating
-                    db.session.delete(rated)
-                    rating = 0
-                else:
-                    rated.rating = rating
+            try:
+                if rated != 0: # change rating
+                    if rated.rating == int(rating): # delete rating
+                        db.session.delete(rated)
+                        rating = 0
+                    else:
+                        rated.rating = rating
 
-            if rated == 0:
-                #Safe it to Database
-                movie_rating = MovieRating(movie_id=int(movie_id),rating=int(rating),user_id=current_user.username)
-                db.session.add(movie_rating)
+                if rated == 0:
+                    #Safe it to Database
+                    movie_rating = MovieRating(movie_id=int(movie_id),rating=int(rating),user_id=current_user.username)
+                    db.session.add(movie_rating)
 
-            db.session.commit()
-        except IntegrityError:
-            pass
-
+                db.session.commit()
+            except IntegrityError:
+                pass
+        elif 'inc_page' in request.form:
+            page = request.form.get('inc_page')
+            
 
         # save to matrix for algorithm
         Rec.add_rating(current_user.username, int(movie_id), int(rating))
@@ -92,7 +99,7 @@ def movies_page():
     result = Rec.recommend(current_user.username)
     show = result
     if len(result) > 10:
-        show = result[:10] # only show first 10
+        show = result[(10*page):((10*page)+10)] # show 10 per page
     
     print(show)
 
@@ -114,7 +121,7 @@ def movies_page():
     # check which movies are rated by the user
     ratings = [current_user.get_rating(m.id,True) for m in movies] # 0 for no rating
 
-    return render_template("movies.html", movies = zip(movies,ratings))
+    return render_template("movies.html", movies = zip(movies,ratings), page = page)
 
 
 # Start development web server
