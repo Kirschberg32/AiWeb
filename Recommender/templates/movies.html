@@ -26,7 +26,7 @@
             </div>
             <div class="panel-footer">
                 Rate:
-                <form action="/{{path_to_follow}}" method="POST">
+                <form action="/{{path_to_follow}}#{{m.id}}" method="POST">
                     <!-- Button Container for ratings -->
                     <div class="star_container" id="star_container{{ m.id }}">
                             
@@ -43,7 +43,7 @@
         </div>
     {% endfor %}
 
-    <form id="loadMoreForm" action="/{{path_to_follow}}" method="POST">
+    <form id="loadMoreForm" action="/{{path_to_follow}}#bottom" method="POST">
         <button type="submit" name="load_more" value="{{page + 1}}">Load More</button>
     </form>
     <!-- Anchor tag at the bottom of the page -->

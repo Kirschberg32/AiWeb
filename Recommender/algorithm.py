@@ -46,8 +46,7 @@ class RecommenderAlgorithm:
     def add_user(cls, username):
         if not isinstance(cls._dframe_matrix, pd.DataFrame):
             cls.create_df_matrix()
-        cls._dframe_matrix = cls._dframe_matrix.assign(username=0.0) # TODO Erstellt column mit name "username"
-        print("Created User")
+        cls._dframe_matrix = cls._dframe_matrix.assign(**{username: 0.0})
         print(cls._dframe_matrix)
 
     @classmethod
