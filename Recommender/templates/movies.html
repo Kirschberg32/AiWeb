@@ -8,6 +8,11 @@
         <div id="movie_{{ m.id }}" class="panel panel-default">
             <!-- Anchor tag to the movie panel -->
             <a id="{{ m.id }}"></a>
+            <!-- Anchor tag for every 10th movie -->
+            {% if loop.index is divisibleby(10) %}
+                {% set page_number = loop.index // 10 %}
+                <a id="page_{{ page_number }}"></a>
+            {% endif %}
 
             <div class="panel-heading"><b><a href = "{{m.links[0].link}}" >{{ m.title }}</a></b></div>
             <div class="panel-body">
@@ -43,7 +48,7 @@
         </div>
     {% endfor %}
 
-    <form id="loadMoreForm" action="/{{path_to_follow}}#bottom" method="POST">
+    <form id="loadMoreForm" action="/{{path_to_follow}}#page_{{ page + 1 }}" method="POST">
         <button type="submit" name="load_more" value="{{page + 1}}">Load More</button>
     </form>
     <!-- Anchor tag at the bottom of the page -->
