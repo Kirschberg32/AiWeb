@@ -96,13 +96,16 @@ def movies_page():
     global movies
     global result
 
+    anchor_id = "#"
     # String-based templates
     if request.method == 'POST':
         if 'rating' in request.form:
-            rating_check()
+            movie_id, _ = rating_check()
+            anchor_id = "#" + str(movie_id)
 
         elif 'load_more' in request.form:
             page = int(request.form.get('load_more'))
+            anchor_id = "#bottom"
     else:
         # page is newly loaded
         page = 0
@@ -128,7 +131,7 @@ def movies_page():
     # check which movies are rated by the user
     ratings = [current_user.get_rating(m.id,True) for m in movies] # 0 for no rating
 
-    return render_template("movies.html", movies = zip(movies,ratings), page = page, path_to_follow = "movies")
+    return render_template("movies.html", movies = zip(movies,ratings), page = page, path_to_follow = "movies" + anchor_id)
 
 # The Members page is only accessible to authenticated users via the @login_required decorator
 @app.route('/ratings', methods=['GET', 'POST'])
