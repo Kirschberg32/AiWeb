@@ -33,7 +33,6 @@ db.init_app(app)  # initialize database
 db.create_all()  # create database if necessary
 user_manager = UserManager(app, db, User)  # initialize Flask-User management
 page = 0
-is_loaded = False
 movies = []
 result = []
 
@@ -51,12 +50,10 @@ def initdb_command():
 @app.route('/')
 def home_page():
     global page
-    global is_loaded
     global movies
     global result
     # render home.html template
     page = 0
-    is_loaded = False
     movies = []
     result = []
     return render_template("home.html")
@@ -92,11 +89,11 @@ def rating_check():
 @login_required  # User must be authenticated
 def movies_page():
     global page
-    global is_loaded
     global movies
     global result
 
     anchor_id = "#"
+    show = []
     # String-based templates
     if request.method == 'POST':
         if 'rating' in request.form:
@@ -106,27 +103,25 @@ def movies_page():
         elif 'load_more' in request.form:
             page = int(request.form.get('load_more'))
             anchor_id = "#bottom"
+
+            show = []
+            if len(result) > 10*(page+1):
+                show = result[(10*page):((10*page)+10)] # show 10 per page
+
     else:
         # page is newly loaded
         page = 0
-        is_loaded = False
         movies = []
-        result = []
-
-    # first 10 movies
-    #movies = Movie.query.limit(10).all()
-    if not is_loaded:
         result = Rec.recommend(current_user.username)
-        is_loaded = True
-    show = result
-    if len(result) > 10*page:
-        show = result[(10*page):((10*page)+10)] # show 10 per page
-        
-        print(show)
+        show = result[:10] if len(result) > 10 else result
 
-        # get the objects of the movies
+    
+    print(show)
+
+    # get the objects of the movies
+    if show:
         movies.extend(Movie.query.filter(Movie.id.in_(show)).all())
-        print(movies)
+    print(movies)
 
     # check which movies are rated by the user
     ratings = [current_user.get_rating(m.id,True) for m in movies] # 0 for no rating
@@ -138,47 +133,43 @@ def movies_page():
 @login_required  # User must be authenticated
 def rating_page():
     global page
-    global is_loaded
     global movies
     global result
 
     movie_id = None
     rating = None
+    show = []
 
     # String-based templates
     if request.method == 'POST':
         if 'rating' in request.form:
             movie_id, rating = rating_check()
 
+            # change rated value
+            for m_r in movies:
+                if m_r[0].id == movie_id:
+                    m_r[1] = rating
+                    break
+
         elif 'load_more' in request.form:
             page = int(request.form.get('load_more'))
+
+            show = []
+            if len(result) > 10*(page+1):
+                show = result[(10*page):((10*page)+10)] # show 10 per page
     else:
         # page is newly loaded
         page = 0
-        is_loaded = False
         movies = []
-        result = []
-
-    if not is_loaded:
         result = current_user.ratings
-        is_loaded = True
-    
-    # change rated value
-    if rating != None:
-        for m_r in movies:
-            if m_r[0].id == movie_id:
-                m_r[1] = rating
-                break
+        show = result[:10] if len(result) > 10 else result
         
-    show = result
-    if len(result) > 10*page:
-        show = result[(10*page):((10*page)+10)] # show 10 per page
-        
-        print(show)
+    print(show)
 
-        # get the objects of the movies
+    # get the objects of the movies
+    if show:
         movies.extend([[r.movie, r.rating] for r in show])
-        print(movies)
+    print(movies)
 
     return render_template("movies.html", movies = movies, page = page, path_to_follow = "ratings")
 

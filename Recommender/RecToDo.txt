@@ -4,6 +4,9 @@ Individualisieren
 
 Docstrings
 
+- Bug: Keine Filme bei movies rec angezeigt, für neue User (problem beim Hinzufügen?)
+- Bug: springt zu letztem bewerteten Film. 
+
 Week 3:
 
 - test 
