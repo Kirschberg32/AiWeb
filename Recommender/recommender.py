@@ -111,13 +111,10 @@ def movies_page():
         movies = []
         result = Rec.recommend(current_user.username)
         show = result[:10] if len(result) > 10 else result
-    
-    print(show)
 
     # get the objects of the movies
     if show:
         movies.extend(Movie.query.filter(Movie.id.in_(show)).all())
-    print(movies)
 
     # check which movies are rated by the user
     ratings = [current_user.get_rating(m.id,True) for m in movies] # 0 for no rating
@@ -159,13 +156,10 @@ def rating_page():
         movies = []
         result = current_user.ratings
         show = result[:10] if len(result) > 10 else result
-        
-    print(show)
 
     # get the objects of the movies
     if show:
         movies.extend([[r.movie, r.rating] for r in show])
-    print(movies)
 
     return render_template("movies.html", movies = movies, page = page, path_to_follow = "ratings")
 

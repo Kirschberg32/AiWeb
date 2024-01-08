@@ -7,6 +7,14 @@ import numpy as np
 # 9869869  |   3        |   0        | ... 
 
 class RecommenderAlgorithm:
+    """
+    A class containing all methods to preprocess data for the recommender algorithm. 
+
+    Attributes:
+        _dframe_matrix (pd.DataFrame): A pandas Dataframe having all usernames as column names and movie_ids as indices. 
+        _genres (list): A list of strings containing all genres. This is used to give best predictions for each genre. 
+        _best_recommendations (list): A list of movie_ids that are the best recommendations for all genres.
+    """
 
     _dframe_matrix = None
 
@@ -15,12 +23,16 @@ class RecommenderAlgorithm:
                'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']
     
     # _best_recommendations = [] # to calculate new each start with current data
+    # This is using the base dataset from the csv files, so you do not have to let it be calculated each time you start the program
     _best_recommendations = [318, 356, 296, 2571, 593, 260, 110, 2959, 527, 480, 
                              1196, 589, 50, 1, 2858, 4993, 1210, 47, 2028, 7153, 457, 608, 
                              2762, 588, 364, 4306, 590, 380, 1214, 595, 1073, 1617, 32587, 1201, 5669, 8464]
 
     @classmethod
     def create_df_matrix(cls): # user x movies
+        """
+        creates the cls_dframe_matrix when it is not created yet by reading in data from the SQL database. 
+        """
 
         if cls._dframe_matrix == None:
             all_movies = Movie.query.all()
@@ -32,25 +44,43 @@ class RecommenderAlgorithm:
 
             for u in all_users:
                 for r in u.ratings:
-                    if r.movie_id in df.index: # Manche Filme fehlten???
+                    if r.movie_id in df.index:
                         df.loc[r.movie_id, u.username] = r.rating
             cls._dframe_matrix = df
 
     @classmethod
     def get_df_matrix(cls):
+        """
+        Returns:
+            A deepcopy of the matrix for usage, so the original one is not changed by accident.
+        """
         if not isinstance(cls._dframe_matrix, pd.DataFrame):
             cls.create_df_matrix()
         return cls._dframe_matrix.copy(deep=True)
 
     @classmethod
     def add_user(cls, username):
+        """
+        adds a column named username to the matrix with default values 0.
+
+        Args:
+            username (str): The username of the user to add
+        """
         if not isinstance(cls._dframe_matrix, pd.DataFrame):
             cls.create_df_matrix()
         cls._dframe_matrix = cls._dframe_matrix.assign(**{username: 0.0})
-        print(cls._dframe_matrix)
 
     @classmethod
     def user_rated(cls, username):
+        """
+        Checks whether there are any ratings in the dataframe for username. 
+        
+        Args:
+            username (str): The username of the user to check
+
+        Returns:
+            truth (bool): True if rated before else False
+        """
         if not isinstance(cls._dframe_matrix, pd.DataFrame):
             cls.create_df_matrix()
         if username not in cls._dframe_matrix.columns:
@@ -61,16 +91,31 @@ class RecommenderAlgorithm:
 
     @classmethod
     def add_rating(cls, username, movie_id, rating):
+        """
+        Adds a rating to the matrix by changing a certain value. Users are usually added with their first rating, or after a restart.
+        
+        Args:
+            username (str): The username of the user to add the rating for (column)
+            movie_id (int): The movie_id of the movie that was rated (index)
+            rating (0<=int<=5): The rating that was given (value)
+        """
         if not isinstance(cls._dframe_matrix, pd.DataFrame):
             cls.create_df_matrix()
-        if username not in cls._dframe_matrix.columns: # User is added when he rates something
+        if username not in cls._dframe_matrix.columns:
             cls.add_user(username)
         cls._dframe_matrix.loc[movie_id, username] = rating
-        #print("Added rating for", username, movie_id)
-        #print(cls._dframe_matrix)
 
     @classmethod
     def recommend(cls, username):
+        """
+        Recommend something for a user. Checks whether there are ratings for the user. Recommends best for each genre if there are no ratings. 
+        
+        Args:
+            username (str): The username of the user to recommend for
+
+        Returns:
+            recommendations (list): A sorted list of movie_ids
+        """
 
         df = cls.get_df_matrix()
 
@@ -82,8 +127,15 @@ class RecommenderAlgorithm:
     
     @classmethod
     def _recommend_best(cls, df):
-
-        print("recommending best")
+        """
+        Calculates the 2 best recommendations for each genre (no duplicates), or returns them if they are saved.
+        
+        Args:
+            df (pd.DataFrame): the dataframe to use for calculations (a copy of cls._dframe_matrix)
+        
+        Returns:
+            recommendations (list): A sorted list of movie_ids
+        """
 
         if cls._best_recommendations:
             return cls._best_recommendations
@@ -105,7 +157,7 @@ class RecommenderAlgorithm:
 
                 # check whether this movie is already in best
                 found = False
-                for idb, sumb in best:
+                for idb, _ in best:
                     if id == idb:
                         found = True
                         break
@@ -127,6 +179,25 @@ class RecommenderAlgorithm:
 
     @classmethod
     def _recommender_algorithm(cls, df, username):
+        """
+        Calculates the best recommendations for a user using a user-centered algorithm.
+
+        Pseudocode:
+            calculate distance of given_user and other_users only using values where given_user != 0
+            sort users by distance and take k (= 10) closest users
+            calculate predictions for ratings for each movie that was not rated by given_user using only the closest users. 
+            Return movies with the highest prediction first. 
+
+        Formula predictions:
+            p = \sum_{over movies} (users - 6 where u > 0 else 0) d
+        
+        Args:
+            df (pd.DataFrame): the dataframe to use for calculations (a copy of cls._dframe_matrix)
+            username (str): The username of the user to recommend for
+
+        Returns:
+            recommendations (list): A sorted list of movie_ids
+        """
 
         k = 10
 
