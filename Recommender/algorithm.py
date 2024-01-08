@@ -183,10 +183,11 @@ class RecommenderAlgorithm:
         Calculates the best recommendations for a user using a user-centered algorithm.
 
         Pseudocode:
-            calculate distance of given_user and other_users only using values where given_user != 0
-            sort users by distance and take k (= 10) closest users
-            calculate predictions for ratings for each movie that was not rated by given_user using only the closest users. 
-            Return movies with the highest prediction first. 
+            1. distances = [(user, euclidian_distance(user[given_user != 0], given_user[given_user != 0])) for user in other_users if user is not given_user]
+            2. k_user, d = sort_by_distance_ascending(distances)[:k=10]
+            3. k_values_weighted = rescale( k_user[given_user == 0], 0 to -5) * d # with -5 being worst, -1 best and 0 not rated
+            4. predictions = sum (k_values_weighted, axis = movies)
+            5. return sort_descending(predictions)
 
         Formula predictions:
             p = \sum_{over movies} (users - 6 where u > 0 else 0) d
