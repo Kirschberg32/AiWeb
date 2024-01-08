@@ -3,7 +3,7 @@
 <div class="container">
     <h2>Movies</h2>
     <p><a href="/{{path_to_follow}}">Reload</a> </p>
-
+    <!-- Lists every movie in the given List -->
     {% for m, r in movies %}
         <div id="movie_{{ m.id }}" class="panel panel-default">
             <!-- Anchor tag to the movie panel -->
@@ -13,15 +13,17 @@
                 {% set page_number = loop.index // 10 %}
                 <a id="page_{{ page_number }}"></a>
             {% endif %}
-
+            <!-- href to the given movie -->
             <div class="panel-heading"><b><a href = "{{m.links[0].link}}" >{{ m.title }}</a></b></div>
             <div class="panel-body">
+                <!-- Lists genres -->
                 <p>
                     <b>Genres: </b>
                     {% for g in m.genres %}
                         <span class="label label-default">{{ g.genre }}</span>
                     {% endfor %}
                 </p>
+                <!-- Lists tags -->
                 <p>
                     <b>User tags: </b>
                     {% for t in m.tags %}
@@ -47,7 +49,7 @@
             </div>
         </div>
     {% endfor %}
-
+    <!-- Load more button to get more entries -->
     <form id="loadMoreForm" action="/{{path_to_follow}}#page_{{ page + 1 }}" method="POST">
         <button type="submit" name="load_more" value="{{page + 1}}">Load More</button>
     </form>

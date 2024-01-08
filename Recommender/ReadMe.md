@@ -28,7 +28,7 @@ Install the requirements. Then run `flask --app recommender.py initdb` to create
 ### Folders:
 * [data](data): Contains the dataset in csv files, that is used as a starting point for the sql database.
 * [instance](instance): Contains the sql database. 
-* [static](static): ???
+* [static](static): Contains static files, like images or .css files
 * [templates](templates): Contains the html templates for the app. 
 
 ### Files:
