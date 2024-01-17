@@ -185,12 +185,10 @@ class RecommenderAlgorithm:
         Pseudocode:
             1. distances = [(user, euclidian_distance(user[given_user != 0], given_user[given_user != 0])) for user in other_users if user is not given_user]
             2. k_user, d = sort_by_distance_ascending(distances)[:k=10]
-            3. k_values_weighted = rescale( k_user[given_user == 0], 0 to -5) * d # with -5 being worst, -1 best and 0 not rated
-            4. predictions = sum (k_values_weighted, axis = movies)
-            5. return sort_descending(predictions)
-
-        Formula predictions:
-            p = \sum_{over movies} (users - 6 where u > 0 else 0) d
+            3. k_values_scaled = k_user[given_user == 0]^(-1) / sum(k_user[given_user == 0]) if sum != 0 else skip division
+            4. k_values_weighted = k_values_scaled * d[given_user == 0]
+            5. predictions = sum (k_values_weighted, axis = movies)
+            6. return sort_descending(predictions)
         
         Args:
             df (pd.DataFrame): the dataframe to use for calculations (a copy of cls._dframe_matrix)

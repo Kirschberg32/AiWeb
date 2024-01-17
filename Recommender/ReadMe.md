@@ -12,12 +12,12 @@ We decided for a user-centered algorithm, as it is known to create more personal
 
 Pseudocode for finding recommendations for given_user (Each user being a vector of ratings for each movie, 0 if not rated)
 ``` plaintext
-1. distances = [(user, euclidian_distance(user[given_user != 0], given_user[given_user != 0])) 
-    for user in other_users if user is not given_user]
+1. distances = [(user, euclidian_distance(user[given_user != 0], given_user[given_user != 0])) for user in other_users if user is not given_user]
 2. k_user, d = sort_by_distance_ascending(distances)[:k=10]
-3. k_values_weighted = rescale( k_user[given_user == 0], 0 to -5) * d # with -5 being worst, -1 best and 0 not rated
-4. predictions = sum (k_values_weighted, axis = movies)
-5. return sort_descending(predictions)
+3. k_values_scaled = k_user[given_user == 0]^(-1) / sum(k_user[given_user == 0]) if sum != 0 else skip division
+4. k_values_weighted = k_values_scaled * d[given_user == 0]
+5. predictions = sum (k_values_weighted, axis = movies)
+6. return sort_descending(predictions)
 ```
 
 Note: These predictions have to be seen in relationship to other predictions. They are not a prediction of the expected rating of given_user.
