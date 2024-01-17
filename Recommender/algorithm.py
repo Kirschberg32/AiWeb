@@ -178,7 +178,7 @@ class RecommenderAlgorithm:
         return only_id
 
     @classmethod
-    def _recommender_algorithm(cls, df, username):
+    def _recommender_algorithm(cls, df, username, k = 10):
         """
         Calculates the best recommendations for a user using a user-centered algorithm.
 
@@ -195,12 +195,11 @@ class RecommenderAlgorithm:
         Args:
             df (pd.DataFrame): the dataframe to use for calculations (a copy of cls._dframe_matrix)
             username (str): The username of the user to recommend for
+            k (int>0): The number of users to use for the predictions
 
         Returns:
             recommendations (list): A sorted list of movie_ids
         """
-
-        k = 10
 
         # find similar users based on rated movies
 
@@ -216,20 +215,25 @@ class RecommenderAlgorithm:
             distance = np.linalg.norm(df_rated[c]-df_rated[username])
             k_nearest.append((distance,c))
             k_nearest.sort()
-            if len(k_nearest) > 10:
+            if len(k_nearest) > k:
                 k_nearest = k_nearest[:k]
 
         # k_nearest contains k tuples
         # k_names contains k names
         k_names = [n for d,n in k_nearest]
-        distances = [d for d,n in k_nearest]
+        distances = np.array([d + 1 for d,n in k_nearest])
             
         # for all not rated movies derive prediction from ratings of similar users
             
         df_not_rated = df[df[username] == 0][k_names]
 
-        # weighted by distance, then added up -> closest to zero is best
-        df_not_rated = (df_not_rated - 6).where(df_not_rated <= -6, 0).mul(distances, axis='columns') # TODO
+        # scale distances so higher value is closer and then let them sum up to 1
+        distances = (np.power(distances,-1) )
+        if np.sum(distances) != 0:
+            distances = distances/np.sum(distances) 
+
+        # weighted by distance, highest is best
+        df_not_rated = df_not_rated.mul(distances, axis='columns')
         prediction = df_not_rated.sum(axis='columns')
 
         df_not_rated['prediction'] = prediction
@@ -238,3 +242,39 @@ class RecommenderAlgorithm:
         sorted = df_not_rated.sort_values(by='prediction', ascending=False)
 
         return list(sorted.index)
+    
+    @classmethod
+    def test_recommender(cls):
+        """
+        A test for _recommender_algorithm
+        """
+
+        # create a test dataframe
+        usernames = ["user1","user2","user3", "user4"]
+        all_movies = [1,2,3,4,5,6,7,8,9,10]
+        ratings = [[(1,5),(2,5),(3,5)],[(2,3),(3,5),(4,5)],[(8,5),(9,5),(10,5)],[(2,5)]]
+        expectation = [3,1,4,5,6,7,8,9,10]
+
+        df = pd.DataFrame(0, columns = usernames,index = [id for id in all_movies],dtype = float)
+
+        for u,r in zip(usernames,ratings):
+            for id,val in r:
+                if id in df.index:
+                    df.loc[id, u] = val
+
+        print("Test Dataframe: \n", df)
+
+        # run a recommendation test
+        results = cls._recommender_algorithm(df, "user4", k = 2)
+
+        print("\nTest 1:")
+        if (results == expectation):
+            print("successful")
+        else:
+            print("not successful")
+            print("Result: ", results)
+            print("Expectation: ", expectation)
+
+if __name__ == "__main__":
+    
+    RecommenderAlgorithm.test_recommender()

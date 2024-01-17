@@ -114,7 +114,17 @@ def movies_page():
 
     # get the objects of the movies
     if show:
-        movies.extend(Movie.query.filter(Movie.id.in_(show)).all())
+        print("Show: ", show)
+        results = Movie.query.filter(Movie.id.in_(show)).all()
+
+        # sort results so they are in the same order as show
+        for s in show:
+            for m in results:
+                if s == m.id:
+                    movies.append(m)
+                    break
+
+        print("Movies: ", movies)
 
     # check which movies are rated by the user
     ratings = [current_user.get_rating(m.id,True) for m in movies] # 0 for no rating
