@@ -2,7 +2,11 @@
 {% block content %}
 <div class="container">
     <h2>Movies</h2>
-    <p><a href="/{{path_to_follow}}">Reload</a> </p>
+    {% if path_to_follow == 'movies' %}
+        <p><a href="{{ url_for('rating_page')}}">Reload</a> </p>
+    {% elif path_to_follow == 'ratings' %}
+        <p><a href="{{ url_for('rating_page')}}">Reload</a> </p>
+    {% endif %}
     <!-- Lists every movie in the given List -->
     {% for m, r in movies %}
         <div id="movie_{{ m.id }}" class="panel panel-default">
@@ -33,7 +37,11 @@
             </div>
             <div class="panel-footer">
                 Rate:
-                <form action="/{{path_to_follow}}#{{m.id}}" method="POST">
+                {% if path_to_follow == 'movies' %}
+                    <form action="{{ url_for('movies_page')}}#{{m.id}}" method="POST">
+                {% elif path_to_follow == 'ratings' %}
+                    <form action="{{ url_for('rating_page')}}#{{m.id}}" method="POST">
+                {% endif %}
                     <!-- Button Container for ratings -->
                     <div class="star_container" id="star_container{{ m.id }}">
                             
@@ -50,7 +58,11 @@
         </div>
     {% endfor %}
     <!-- Load more button to get more entries -->
-    <form id="loadMoreForm" action="/{{path_to_follow}}#page_{{ page + 1 }}" method="POST">
+    {% if path_to_follow == 'movies' %}
+        <form id="loadMoreForm" action="{{ url_for('movies_page')}}#page_{{ page + 1 }}" method="POST">
+    {% elif path_to_follow == 'ratings' %}
+        <form id="loadMoreForm" action="{{ url_for('rating_page')}}#page_{{ page + 1 }}" method="POST">
+    {% endif %}
         <button type="submit" name="load_more" value="{{page + 1}}">Load More</button>
     </form>
     <!-- Anchor tag at the bottom of the page -->
