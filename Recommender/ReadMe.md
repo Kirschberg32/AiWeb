@@ -31,10 +31,12 @@ Install the requirements. Then run `flask --app recommender.py initdb` to create
 * [instance](instance): Contains the sql database. 
 * [static](static): Contains static files, like images or .css files
 * [templates](templates): Contains the html templates for the app. 
+* [Examples](Examples): Contains an example picture
 
 ### Files:
 * [algorithm.py](algorithm.py): Contains a class RecommenderAlgorithm with all methods that are needed for the recommendation algorithm (also data preprocessing etc. ).
-* [movels.py](movels.py): Contains all classes used for the SQL database. 
+* [models.py](models.py): Contains all classes used for the SQL database. 
 * [read_data.py](read_data.py): Contains all functions for creating the SQL database from the csv files. 
 * [recommender.py](recommender.py): Contains the flask web app. 
+* [recommender.wsgi](recommender.wsgi): The wsgi file for the server
 * [requirements.txt](requirements.txt): list of dependencies for our flask app
