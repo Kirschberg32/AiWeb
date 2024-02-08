@@ -4,6 +4,8 @@
 from flask import Flask, request, render_template, jsonify
 import json
 import requests
+from bot import GuessingBot
+import datetime
 
 # Class-based application configuration
 class ConfigClass(object):
@@ -20,9 +22,17 @@ app.app_context().push()  # create an app context before initializing db
 HUB_URL = 'http://localhost:5555'
 HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '22334455'
-CHANNEL_NAME = "The Lousy Channel"
+CHANNEL_NAME = "The Guessing Game"
 CHANNEL_ENDPOINT = "http://localhost:5002"
-CHANNEL_FILE = 'messages.json'
+CHANNEL_FILE = 'messages_guess.json'
+
+bot = GuessingBot()
+
+def send_start(): # send a starting message when the channel is restarted.
+    messages = read_messages()
+    # BOT message append
+    messages.append({'content':bot.start() + "send_start", 'sender':bot.name, 'timestamp':datetime.datetime.now().isoformat(), 'user':False}) # TODO check if once or twice on server
+    save_messages(messages)
 
 @app.cli.command('register')
 def register_command():
@@ -67,6 +77,7 @@ def home_page():
 # POST: Send a message
 @app.route('/', methods=['POST'])
 def send_message():
+    global bot
     # fetch channels from server
     # check authorization header
     if not check_authorization(request):
@@ -83,20 +94,24 @@ def send_message():
         return "No timestamp", 400
     # add message to messages
     messages = read_messages()
-    messages.append({'content':message['content'], 'sender':message['sender'], 'timestamp':message['timestamp']})
+    messages.append({'content':message['content'], 'sender':message['sender'], 'timestamp':message['timestamp'], 'user':True})
+    # BOT message append
+    answer = bot.apply(message['content'])
+    messages.append({'content':answer, 'sender':bot.name, 'timestamp':datetime.datetime.now().isoformat(), 'user':False})
     save_messages(messages)
     return "OK", 200
 
 def read_messages():
     global CHANNEL_FILE
+    global bot
     try:
         f = open(CHANNEL_FILE, 'r')
     except FileNotFoundError:
-        return []
+        return [{'content':bot.start(), 'sender':bot.name, 'timestamp':datetime.datetime.now().isoformat(), 'user':False}]
     try:
         messages = json.load(f)
     except json.decoder.JSONDecodeError:
-        messages = []
+        messages = [{'content':bot.start(), 'sender':bot.name, 'timestamp':datetime.datetime.now().isoformat(), 'user':False}]
     f.close()
     return messages
 
@@ -104,6 +119,8 @@ def save_messages(messages):
     global CHANNEL_FILE
     with open(CHANNEL_FILE, 'w') as f:
         json.dump(messages, f)
+
+send_start()
 
 # Start development web server
 if __name__ == '__main__':
