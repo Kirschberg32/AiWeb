@@ -1,0 +1,24 @@
+.container {
+    max-width: 60vw; /* Set a maximum width for the content */
+    margin: 0 auto; /* Center the container horizontally */
+}
+
+.message-container {
+    padding: 10px;
+    border-radius: 10px;
+    margin: 10px;
+    display: block; /* Set display to block */
+    clear: both; /* Ensure each message starts a new row */
+}
+
+.left-message {
+    text-align: left;
+    background-color: lightblue;
+    margin-right: 25%; /* Add a margin to push the left-message to the left */
+}
+
+.right-message {
+    text-align: right;
+    background-color: lightgreen;
+    margin-left: 25%; /* Add a margin to push the right-message to the right */
+}

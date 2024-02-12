@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Channel {{ channel.name }}</title>
+    <!-- Include jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Use separate .css file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='mystyle.css') }}">
+</head>
+<body>
+<div class="container">
+    <p>The distributed messenger. <a href="{{ url_for('home_page') }}">List of channels.</a> </p>
+    {% if channel %}
+        <h1>Channel {{ channel.name }}</h1>
+        <div id="messages">
+            {% for message in messages %}
+                <div class="message-container {% if message.user %}left-message{% else %}right-message{% endif %}">
+                    <h2>{{ message.sender }}</h2>
+                    <p>{{ message.content }}</p>
+                    <p class="timestamp">{{ message.timestamp }}</p>
+                </div>
+            {% endfor %}
+        </div>
+        <form id="messageForm">
+            <input type="hidden" name="channel" value="{{ channel.endpoint | urlencode }}">
+            Sender: <input type="text" name="sender" id="sender"> <br>
+            Message: <input type="text" name="content" id="content"> <br>
+            <input type="submit" value="Post">
+        </form>
+    {% else %}
+        <h1>Channel not found</h1>
+    {% endif %}
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#messageForm').submit(function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+            // Send form data using AJAX
+            $.ajax({
+                url: '/post',
+                type: 'POST',
+                data: $(this).serialize(), // Serialize form data
+                success: function(response) {
+                    // Update messages div with new messages
+                    $('#messages').html(response);
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
