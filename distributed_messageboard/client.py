@@ -51,8 +51,8 @@ def show_channel():
     if response.status_code != 200:
         return "Error fetching messages: "+str(response.text), 400
     messages = response.json()
-    print("\n",channel,"\n")
-    print(messages,"\n")
+    #print("\n",channel,"\n")
+    #print(messages,"\n")
     return render_template("channel_guess.html", channel=channel, messages=messages)
 
 

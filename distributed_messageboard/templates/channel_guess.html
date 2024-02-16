@@ -46,7 +46,10 @@
                 data: $(this).serialize(), // Serialize form data
                 success: function(response) {
                     // Update messages div with new messages
-                    $('#messages').html(response);
+                    var newMessages = $(response).find('.message-container');
+                    var newMessages = newMessages.slice(-2);
+                    $('#messages').append(newMessages);
+                    $('#content').val('');
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
