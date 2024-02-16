@@ -16,7 +16,7 @@
         <h1>Channel {{ channel.name }}</h1>
         <div id="messages">
             {% for message in messages %}
-                <div class="message-container {% if message.user %}left-message{% else %}right-message{% endif %}">
+                <div class="message-container {% if message.user %}right-message{% else %}left-message{% endif %}">
                     <h2>{{ message.sender }}</h2>
                     <p>{{ message.content }}</p>
                     <p class="timestamp">{{ message.timestamp }}</p>
@@ -39,15 +39,29 @@
         $('#messageForm').submit(function(e) {
             e.preventDefault(); // Prevent default form submission
 
+             // Get form input values
+            var sender = $('#sender').val();
+            var content = $('#content').val();
+
+            // Construct HTML for the sender's message
+            var senderMessageHTML = '<div class="message-container right-message">';
+            senderMessageHTML += '<h2>' + sender + '</h2>';
+            senderMessageHTML += '<p>' + content + '</p>';
+            senderMessageHTML += '<p class="timestamp">' + new Date().toISOString() + '</p>'; // You might need to adjust the timestamp here
+            senderMessageHTML += '</div>';
+
+            // Append sender's message to the messages container
+            $('#messages').append(senderMessageHTML);
+
             // Send form data using AJAX
             $.ajax({
                 url: '/post',
                 type: 'POST',
                 data: $(this).serialize(), // Serialize form data
                 success: function(response) {
-                    // Update messages div with new messages
+                    // Update messages by getting the newest entry
                     var newMessages = $(response).find('.message-container');
-                    var newMessages = newMessages.slice(-2);
+                    var newMessages = newMessages.slice(-1);
                     $('#messages').append(newMessages);
                     $('#content').val('');
                 },
