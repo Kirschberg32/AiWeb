@@ -1,3 +1,4 @@
+/* Cointainer entails messages */
 .container {
     max-width: 60vw; /* Set a maximum width for the content */
     margin: 0 auto; /* Center the container horizontally */
@@ -21,4 +22,36 @@
     text-align: right;
     background-color: lightgreen;
     margin-left: 25%; /* Add a margin to push the right-message to the right */
+}
+
+/* loading Indicator to visualize waiting */
+#loadingIndicator {
+    display: none;
+}
+
+.loading-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: black;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+@keyframes blink {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+.loading-dot:nth-child(1) {
+    animation: blink 1s infinite;
+}
+
+.loading-dot:nth-child(2) {
+    animation: blink 1s infinite 0.33s;
+}
+
+.loading-dot:nth-child(3) {
+    animation: blink 1s infinite 0.66s;
 }

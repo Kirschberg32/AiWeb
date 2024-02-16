@@ -14,6 +14,7 @@
     <p>The distributed messenger. <a href="{{ url_for('home_page') }}">List of channels.</a> </p>
     {% if channel %}
         <h1>Channel {{ channel.name }}</h1>
+         <!-- Show all messages -->   
         <div id="messages">
             {% for message in messages %}
                 <div class="message-container {% if message.user %}right-message{% else %}left-message{% endif %}">
@@ -23,12 +24,21 @@
                 </div>
             {% endfor %}
         </div>
+        <!-- Indicator for loading -->    
+        <div id="loadingIndicator" style="display: none;">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+         <!-- Input Form to send Messages -->   
         <form id="messageForm">
             <input type="hidden" name="channel" value="{{ channel.endpoint | urlencode }}">
             Sender: <input type="text" name="sender" id="sender"> <br>
             Message: <input type="text" name="content" id="content"> <br>
             <input type="submit" value="Post">
         </form>
+    
+        
     {% else %}
         <h1>Channel not found</h1>
     {% endif %}
@@ -52,6 +62,11 @@
 
             // Append sender's message to the messages container
             $('#messages').append(senderMessageHTML);
+            
+            scrollToBottom();
+
+            // Show loading indicator
+            $('#loadingIndicator').show();
 
             // Send form data using AJAX
             $.ajax({
@@ -59,17 +74,28 @@
                 type: 'POST',
                 data: $(this).serialize(), // Serialize form data
                 success: function(response) {
+
+                    $('#loadingIndicator').hide();
+
                     // Update messages by getting the newest entry
                     var newMessages = $(response).find('.message-container');
                     var newMessages = newMessages.slice(-1);
                     $('#messages').append(newMessages);
                     $('#content').val('');
+
+                    scrollToBottom();
+
                 },
                 error: function(xhr, status, error) {
                     console.error(xhr.responseText);
+                    $('#loadingIndicator').hide();
                 }
             });
         });
+        // Function to scroll to the bottom of the page
+        function scrollToBottom() {
+            $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
+        }
     });
 </script>
 
