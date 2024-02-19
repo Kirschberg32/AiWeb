@@ -16,11 +16,11 @@
         <h1>Channel {{ channel.name }}</h1>
          <!-- Show all messages -->   
         <div id="messages">
-            {% for message in messages %}
+            {% for message in messages[-10:] %}
                 <div class="message-container {% if message.user %}right-message{% else %}left-message{% endif %}">
                     <h2>{{ message.sender }}</h2>
                     <p>{{ message.content }}</p>
-                    <p class="timestamp">{{ message.timestamp }}</p>
+                    <p class="timestamp"> {{ message.timestamp[11:16] + " | " + message.timestamp[8:10] + "." + message.timestamp[5:7] + "." + message.timestamp[0:4]}}</p>
                 </div>
             {% endfor %}
         </div>

@@ -24,6 +24,10 @@
     margin-left: 25%; /* Add a margin to push the right-message to the right */
 }
 
+.timestamp {
+    text-align: right;
+}
+
 /* loading Indicator to visualize waiting */
 #loadingIndicator {
     display: none;

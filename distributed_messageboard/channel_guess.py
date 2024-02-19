@@ -30,8 +30,15 @@ bot = GuessingBot()
 
 def send_start(): # send a starting message when the channel is restarted.
     messages = read_messages()
+    last_message = messages[-1]
+
+    # check if last message is the start message of bot
+    if last_message['user'] == False: 
+        if bot.is_start(last_message['content']):
+            return
+
     # BOT message append
-    messages.append({'content':bot.start() + "send_start", 'sender':bot.name, 'timestamp':datetime.datetime.now().isoformat(), 'user':False}) # TODO check if once or twice on server
+    messages.append({'content':bot.start(), 'sender':bot.name, 'timestamp':datetime.datetime.now().isoformat(), 'user':False})
     save_messages(messages)
 
 @app.cli.command('register')

@@ -22,8 +22,11 @@ import random
 class GuessingBot:
 
     def __init__(self):
-        self.start()
+
+        self.max_value = 10
         self.name = "GUESSING BOT"
+
+        self.start()
     
     def apply(self, input : str): # input = "Ich schätze 10"
 
@@ -36,14 +39,19 @@ class GuessingBot:
             return "There were too many numbers."
         n = int(string[0])
 
+        # check if max value should be changed # -20
+        if "max_value" in input:
+            self.max_value = n
+            return f"The maximum value was changed. You guess a number between 1 and {self.max_value} now."
+
         # check if in range
-        if n < 1 or n > 10:
-            return f"{n} is a bad guess. Then number is between 1 and 10."
+        if n < 1 or n > self.max_value:
+            return f"{n} is a bad guess. Then number is between 1 and {self.max_value}."
         
         # check if correct 
         if n == self.number:
             self.start()
-            return f"{n} is the correct number. \nYou can guess a new number between 1 and 10 now."
+            return f"{n} is the correct number. \nYou can guess a new number between 1 and {self.max_value} now."
         if n < self.number:
             return f"{n} is too small."
         if n > self.number:
@@ -51,5 +59,14 @@ class GuessingBot:
         return "Something went wrong."
         
     def start(self):
-        self.number = random.randint(1,10)
-        return "Guess a number between 1 and 10."
+        self.number = random.randint(1,self.max_value)
+        return f"Guess a number between 1 and {self.max_value}. You can change the maximum value by typing 'max_value = <n>'"
+    
+    def is_start(self,message):
+        """
+        Bot checks whether the message is a start message.
+        """
+
+        if "number between 1 and 10" in message:
+            return True 
+        return False
