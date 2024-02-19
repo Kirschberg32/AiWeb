@@ -42,7 +42,8 @@ class GuessingBot:
         # check if max value should be changed # -20
         if "max_value" in input:
             self.max_value = n
-            return f"The maximum value was changed. You guess a number between 1 and {self.max_value} now."
+            self.start()
+            return f"The maximum value was changed. \nYou can guess a number between 1 and {self.max_value} now."
 
         # check if in range
         if n < 1 or n > self.max_value:
@@ -60,7 +61,7 @@ class GuessingBot:
         
     def start(self):
         self.number = random.randint(1,self.max_value)
-        return f"Guess a number between 1 and {self.max_value}. You can change the maximum value by typing 'max_value = <n>'"
+        return f"Guess a number between 1 and {self.max_value}. \nYou can change the maximum value by typing 'max_value = <n>'"
     
     def is_start(self,message):
         """
