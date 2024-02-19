@@ -77,7 +77,7 @@ class GuessingBot2:
         
         # check if in right quadrant
         if hint == "quadrant":
-            if np.sign([x,y]) == np.sign(self.point):
+            if (np.sign([x,y]) == np.sign(self.point)).all():
                 return "In correct quadrant"
             return "Not in right quadrant."
 
@@ -88,7 +88,7 @@ class GuessingBot2:
             # check which half
 
         if hint == "distance":
-            dist = np.linalg.norm([x,y]-self.point)
+            dist = np.linalg.norm(np.array([x,y])-np.array(self.point))
             if dist < self.max_value/3:
                 return f"The point is less than {self.max_value/3} away from {(x,y)}."
             return f"The point is more than {self.max_value/3} away from {(x,y)}."
@@ -96,9 +96,9 @@ class GuessingBot2:
         return "Something went wrong."
         
     def start(self):
-        self.point = [ random.randint(1,self.max_value), random.randint(1,self.max_value) ]
+        self.point = [ random.randint(- self.max_value,self.max_value), random.randint(-self.max_value,self.max_value) ]
         self.hints = ["hyperplane", "distance", "quadrant"]
-        return f"You can get 3 hints before you have to make your final guess. They are 'hyperlane', 'distance' and 'quadrant'. For a sample input type 'help'. Each hint is based on a point given by you. When you did you final guess type 'reveal' to get the correct point."
+        return f"You can get 3 hints before you have to make your final guess. They are 'hyperplane', 'distance' and 'quadrant'. For a sample input type 'help'. Each hint is based on a point given by you. When you did you final guess type 'reveal' to get the correct point."
     
     def start_message(self):
         return_string = f"This is a point guessing game. You can guess a point in the square ( - {self.max_value},- {self.max_value})  to ({self.max_value},{self.max_value})."
