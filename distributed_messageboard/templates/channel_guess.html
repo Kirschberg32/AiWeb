@@ -4,10 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Channel {{ channel.name }}</title>
+    <!-- Use icon -->
+    {% if channel.name == "The Guessing Game"  %}
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/Guess.png') }}">
+    {% endif %}
+    {% if channel.name == "The Point Guessing Game" %}
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/Koordinaten.png') }}">
+    {% endif %}
     <!-- Include jQuery library -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <!-- Use separate .css file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='mystyle.css') }}">
+
 </head>
 <body>
 <div class="container">
@@ -19,7 +27,7 @@
             {% for message in messages[-10:] %}
                 <div class="message-container {% if message.user %}right-message{% else %}left-message{% endif %}">
                     <h2>{{ message.sender }}</h2>
-                    <p>{{ message.content }}</p>
+                    <p>{{ message.content | safe }}</p>
                     <p class="timestamp"> {{ message.timestamp[11:16] + " | " + message.timestamp[8:10] + "." + message.timestamp[5:7] + "." + message.timestamp[0:4]}}</p>
                 </div>
             {% endfor %}
