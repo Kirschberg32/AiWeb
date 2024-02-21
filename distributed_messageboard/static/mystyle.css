@@ -1,3 +1,23 @@
+section#channels {
+    font-size: 3vh;
+    text-align: left;
+    height: 65vh;
+    overflow: auto;
+}
+li#channel {
+    color: black;
+    background-color: #9bb1fa;
+    border: 0.4vh solid #032227;
+    display: inline-block;
+    margin-bottom: 1vh;
+    margin-right: 2vh;
+    transition: transform 0.3s ease;
+    padding: 1vh;
+}
+li#channel:hover {
+    transform: scale(0.95);
+}
+
 /* Cointainer entails messages */
 .container {
     max-width: 60vw; /* Set a maximum width for the content */

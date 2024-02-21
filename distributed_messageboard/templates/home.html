@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>List of channels</title>
-    
+    <title>List of channels</title>    
     <!-- Use separate .css file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='mystyle.css') }}">
 </head>
 <body>
 
 <h1>List of message channels</h1>
-
-<ul>
-    {% for channel in channels %}
-        <li><a href="/show?channel={{ channel.endpoint | urlencode }}">{{ channel.name }}</a></li>
-    {% endfor %}
-</ul>
-
+<section id="channels">
+    <ul>
+        {% for channel in channels %}
+            <li id="channel"><a href="/show?channel={{ channel.endpoint | urlencode }}">{{ channel.name }}</a></li>
+        {% endfor %}
+    </ul>
+</section>
 </body>
 </html>
