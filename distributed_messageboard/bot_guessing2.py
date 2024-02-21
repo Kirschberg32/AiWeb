@@ -3,7 +3,7 @@ point guessing game bot
 """
 
 """
-Ideas: Spiel bleibt gleich bei channel neustart, Testen was bei mehreren Spielern passiert. Guesses are analysed and automatically processed. 
+Ideas: Spiel bleibt gleich bei channel neustart, Testen was bei mehreren Spielern passiert. Guesses are analysed and automatically processed. ReadMe
 
 x y Hyperplane
 
