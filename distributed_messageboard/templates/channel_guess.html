@@ -6,10 +6,10 @@
     <title>Channel {{ channel.name }}</title>
     <!-- Use icon -->
     {% if channel.name == "The Guessing Game"  %}
-        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/Guess.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/guessquest.png') }}">
     {% endif %}
     {% if channel.name == "The Point Guessing Game" %}
-        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/Koordinaten.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/CoordinateIcon.jpg') }}">
     {% endif %}
     <!-- Include jQuery library -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -108,4 +108,11 @@
 </script>
 
 </body>
+
+<footer>
+    <p>Created for the course Artificial Intelligence and the Web</p>
+    <p>Author: Eosandra (<a href="mailto:egrund@uos.de" style="color: #a1a5ff;">egrund@uos.de</a>), 
+        Fabian Kirsch(<a href="mailto:fkirsch@uos.de" style="color: #a1a5ff;">fkirsch@uos.de</a>)</p>
+</footer>
+
 </html>

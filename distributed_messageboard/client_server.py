@@ -5,12 +5,11 @@ import datetime
 
 app = Flask(__name__)
 
-HUB_AUTHKEY = '1234567890'
-HUB_URL = 'http://localhost:5555'
+HUB_AUTHKEY = 'Crr-K3d-2N'
+HUB_URL = 'https://temporary-server.de'
 
 CHANNELS = None
 LAST_CHANNEL_UPDATE = None
-
 
 def update_channels():
     global CHANNELS, LAST_CHANNEL_UPDATE
@@ -51,8 +50,7 @@ def show_channel():
     if response.status_code != 200:
         return "Error fetching messages: "+str(response.text), 400
     messages = response.json()
-
-    return render_template("channel_guess.html", channel=channel, messages=messages)
+    return render_template("channel.html", channel=channel, messages=messages)
 
 
 @app.route('/post', methods=['POST'])
