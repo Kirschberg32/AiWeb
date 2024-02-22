@@ -3,9 +3,6 @@ Message Channel and Client by Eosandra Grund and Fabian Kirsch
 # Channel
 We created a Chat Channel with a Chatbot for the course "Artificial Intelligence and the Web"(WS23/24). The Channel and the Client are running on a university server. 
 
-Example screenshot of the page showing movie recommendations. The Reload link lets the recommendations be calculated newly after the user rated some. If you scroll to the bottom there is a load more button to show more recommendations. 
-The recommender also as a similar page showing all the movies you rated in the past with your rating. You can remove a rating by clicking on the same rating again. 
-
 ## The Chatbot of The 2D Point Guessing Game
 It is a point guessing game. The goal is to guess a 2D point in the square ( - {self.max_value},- {self.max_value})  to ({self.max_value},{self.max_value}), or rather to be as close as possible to it. The x and y coordinates of the point to guess are whole numbers.
         <br>{self.max_value} is the maximum value and the difficulty of the game depends on it. It can be changed by typing <b>'max_value n'</b>. Replace n with a number.
@@ -24,7 +21,7 @@ It is a point guessing game. The goal is to guess a 2D point in the square ( - {
 It is a simple guessing game, of a number between 0 and n. Where n can be changed the same way as in 'The 2D Point Guessing Game' but has 10 as the default value. 
 
 
-## Usage
+## Run Developmental Server
 Install the requirements. Let the hub, the client and the wanted channel run in separated consoles. The register the channel with the hub by running ```flask --app channelfilename.py register```. Then you have a developmental version of the programm running on your computer. 
 
 ## Files: 
