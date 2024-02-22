@@ -32,7 +32,7 @@ Install the requirements. Let the hub, the client and the wanted channel run in 
 * [instance](instance): Contains the sql database saving the registered channels for the local hub. 
 * [static](static): Contains static files, like images or .css files
 * [templates](templates): Contains the html templates for the Client app. 
-* [wsgi_files](wsgi_files): Contains the wsgi files for the server & the code with changed paths for the server. ???
+* [wsgi_files](wsgi_files): Contains the wsgi files for the server & the code with changed paths for the server.
 * [data](data): Contains two example chats. 
 * [bot](bot): Contains all the code for the bots
 
