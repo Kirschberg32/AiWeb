@@ -22,7 +22,7 @@ app.app_context().push()  # create an app context before initializing db
 HUB_URL = 'https://temporary-server.de/'
 HUB_AUTHKEY = 'Crr-K3d-2N'
 CHANNEL_AUTHKEY = '22022024'
-CHANNEL_NAME = "The Point Guessing Game"
+CHANNEL_NAME = "The 2D Point Guessing Game"
 CHANNEL_ENDPOINT = "https://vm146.rz.uni-osnabrueck.de/user058/channel_guess2.wsgi" # don't forget to change it in the bottom of the file
 CHANNEL_FILE = 'messages_guess2.json'
 
@@ -103,7 +103,7 @@ def send_message():
     messages = read_messages()
     messages.append({'content':message['content'], 'sender':message['sender'], 'timestamp':message['timestamp'], 'user':True})
     # BOT message append
-    answer = bot.apply(message['content'])
+    answer = bot.apply(message['content'], message['sender'])
     messages.append({'content':answer, 'sender':bot.name, 'timestamp':datetime.datetime.now().isoformat(), 'user':False})
     save_messages(messages)
     return "OK", 200
