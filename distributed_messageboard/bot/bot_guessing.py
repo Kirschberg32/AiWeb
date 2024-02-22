@@ -1,19 +1,6 @@
 """
 guessing game bot
-
-Ideas:
-- variable end number
-"""
-
-"""
-
-Bot ideas: 
-https://www.geeksforgeeks.org/convert-text-speech-python/
-https://stackoverflow.com/questions/64501684/how-can-i-play-playing-a-mp3-sound-with-flask
-- > channel.html müsste verändert werden für mp3 wie besonders für den einen channel. 
-- > text to speech on and off for all channels
-
-
+by Eosandra Grund & Fabian Kirsch
 """
 
 import random
@@ -25,10 +12,18 @@ class GuessingBot:
 
         self.max_value = 10
         self.name = "GUESSING BOT"
-
         self.start()
     
     def apply(self, input : str): # input = "Ich schätze 10"
+        """
+        Use this method to apply the bot to a message. It will return the answer
+
+        Args:
+            input (str): The user input to answer to
+
+        Returns:
+            answer (str): The message to send back
+        """
 
         string = [i for i in input.split() if i.isdigit()]
 
@@ -60,6 +55,10 @@ class GuessingBot:
         return "Something went wrong."
         
     def start(self):
+        """
+        Used to start or restart a game. Returns the start message of the bot.
+        
+        """
         self.number = random.randint(1,self.max_value)
         return f"Guess a number between 1 and {self.max_value}. <br>You can change the maximum value by typing <b>'max_value n'</b>. Replace n with a number."
     

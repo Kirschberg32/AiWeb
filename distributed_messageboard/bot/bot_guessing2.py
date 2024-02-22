@@ -1,19 +1,6 @@
 """
 point guessing game bot
-"""
-
-"""
-Ideas: 
-- Testen was bei mehreren Spielern passiert. 
-- ReadMe
-
-x y Hyperplane
-
-Hint:
-- Hyperplane
-- Distance
-- Quadrant
-- 
+by Eosandra Grund & Fabian Kirsch
 """
 
 import random
@@ -24,15 +11,22 @@ class GuessingBot2:
     def __init__(self):
 
         self.max_value = 4
-        self.name = "GUESSING BOT"
+        self.name = "POINT GUESSING BOT"
 
         self.point = []
         self.hints = []
         self.guesses = []
     
     def apply(self, input : str, sender : str = ""): # input = "Ich schätze 10"
-        """ 
-        gets as input the user input and responses with a string
+        """
+        Use this method to apply the bot to a message. It will return the answer
+
+        Args:
+            input (str): The user input to answer to
+            sender (str): The name of the sender of the message. Used to save guesses for later with the user's name.
+
+        Returns:
+            answer (str): The message to send back
         """
 
         input = input.lower()
@@ -40,8 +34,10 @@ class GuessingBot2:
         # check if there are important commands in the input text
         if "start" in input:
             return self.start()
+        
         elif "help" in input:
             return self.help()
+        
         elif "max_value" in input:
             digit = [i for i in input.split() if i.lstrip('-+').isdigit()]
             if len(digit) == 1:
@@ -49,8 +45,10 @@ class GuessingBot2:
                 self.start()
                 return f"The maximum value was changed. <br>You can guess a point in the square ( - {self.max_value},- {self.max_value})  to ({self.max_value},{self.max_value}) now."
             return f"Please give exactly one possible value for max_value."
+        
         elif self.point == []:
             return "No active game. Type <b>'start'</b> to start a game."
+        
         elif "reveal" in input:
             correct = self.point
 
@@ -60,12 +58,10 @@ class GuessingBot2:
                 g.insert(0,dist)
             self.guesses.sort()
 
+            # Prepare string for ranking
             ranking = f"""<h2> Ranking </h2>"""
-
             for i,g in enumerate(self.guesses):
                 ranking += f"<pre>{i+1}. <b>{g[2].ljust(15)}</b> guessed {str(g[1]).ljust(9)} with a distance of {g[0].round(2)}<br></pre>"
-
-            print(ranking)
 
             # delete old game
             self.point = []
@@ -82,7 +78,7 @@ class GuessingBot2:
             self.append_guess(sender, (x,y))
             return f"Thank you for your guess {sender}."
 
-        # check if 2 numbers
+        # check if exactly 2 numbers
         if len(digit) == 0:
             return f"There was no number in your input {sender}. For information about the game type <b>'help'</b>. "
         if len(digit) == 1:
@@ -131,7 +127,7 @@ class GuessingBot2:
         
     def start(self):
         """
-        starts a game of point guessing
+        starts a game of point guessing, Returns a message with info about the game.
         """
         self.point = [ random.randint(- self.max_value,self.max_value), random.randint(-self.max_value,self.max_value) ]
         self.hints = ["hyperplane", "distance", "quadrant"]
@@ -139,7 +135,7 @@ class GuessingBot2:
     
     def start_message(self):
         """
-        Returns a message with the most important rules and how to start. 
+        Returns a message with the most important rules and how to start. This is send even before the game actually starts. 
         """
         return_string = f"This is a point guessing game. You can guess a point in the square ( - {self.max_value},- {self.max_value})  to ({self.max_value},{self.max_value})."
         return_string += f"<br>You can change the maximum value for x and y by typing <b>'max_value n'</b>. Replace n with a number. The x and y coordinates of the point to guess are whole numbers. <br>The game starts when you type <b>'start'</b>."
@@ -154,7 +150,14 @@ class GuessingBot2:
             return True 
         return False
     
-    def append_guess(self, sender : str, guess : str):
+    def append_guess(self, sender : str, guess : tuple):
+        """ 
+        appends a new guess to the saved guesses. If there is a guess under the same name already, it will be deleted. 
+
+        Args:
+            sender (str): The name of the sender of the message. Used to save guesses for later with the user's name.
+            guess (tuple): E.g. (2,3) a tuple containing two numbers.
+        """
 
         for g in self.guesses:
             if g[1] == sender:
@@ -164,7 +167,7 @@ class GuessingBot2:
     
     def help(self): 
         """
-        Information about:
+        Returns Information about:
 
         - Goal of the game
         - How to start the game.

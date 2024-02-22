@@ -4,7 +4,7 @@
 from flask import Flask, request, render_template, jsonify
 import json
 import requests
-from bot_guessing import GuessingBot
+from bot.bot_guessing import GuessingBot
 import datetime
 
 # Class-based application configuration
@@ -24,7 +24,7 @@ HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '22334455'
 CHANNEL_NAME = "The Simple Number Guessing Game"
 CHANNEL_ENDPOINT = "http://localhost:5002"
-CHANNEL_FILE = 'messages_guess.json'
+CHANNEL_FILE = 'data/messages_guess.json'
 
 bot = GuessingBot()
 
