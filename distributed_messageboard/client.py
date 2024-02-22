@@ -52,7 +52,7 @@ def show_channel():
         return "Error fetching messages: "+str(response.text), 400
     messages = response.json()
 
-    return render_template("channel_guess.html", channel=channel, messages=messages)
+    return render_template("channel.html", channel=channel, messages=messages)
 
 
 @app.route('/post', methods=['POST'])

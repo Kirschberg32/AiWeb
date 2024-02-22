@@ -61,7 +61,7 @@ class GuessingBot:
         
     def start(self):
         self.number = random.randint(1,self.max_value)
-        return f"Guess a number between 1 and {self.max_value}. <br>You can change the maximum value by typing 'max_value = <n>'"
+        return f"Guess a number between 1 and {self.max_value}. <br>You can change the maximum value by typing <b>'max_value n'</b>. Replace n with a number."
     
     def is_start(self,message):
         """

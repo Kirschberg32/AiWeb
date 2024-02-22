@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Channel {{ channel.name }}</title>
+</head>
+<body>
+<p>The distributed messenger. <a href="{{ url_for('home_page') }}">List of channels.</a> </p>
+{% if channel %}
+    <h1>Channel {{ channel.name }}</h1>
+    <div class="container">
+        {% for message in messages %}
+            <div class="message-container {% if message.user %}right-message{% else %}left-message{% endif %}">
+                <h2>{{ message.sender }}</h2>
+                <p>{{ message.content }}</p>
+                <p class="timestamp">{{ message.timestamp }}</p>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <h1>Channel not found</h1>
+{% endif %}
+
+<form action="post" method="post">
+    <input type="hidden" name="channel" value="{{ channel.endpoint | urlencode }}">
+    Sender: <input type="text" name="sender" id="sender"> <br>
+    Message: <input type="text" name="content" id="content"> <br>
+    <input type="submit" value="Post">
+</form>
+
+</body>
+</html>

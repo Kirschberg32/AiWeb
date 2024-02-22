@@ -4,7 +4,6 @@ point guessing game bot
 
 """
 Ideas: 
-- Spiel bleibt gleich bei channel neustart, 
 - Testen was bei mehreren Spielern passiert. 
 - ReadMe
 

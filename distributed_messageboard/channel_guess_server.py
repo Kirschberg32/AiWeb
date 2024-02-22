@@ -22,8 +22,8 @@ app.app_context().push()  # create an app context before initializing db
 HUB_URL = 'https://temporary-server.de/'
 HUB_AUTHKEY = 'Crr-K3d-2N'
 CHANNEL_AUTHKEY = '21022024'
-CHANNEL_NAME = "The Guessing Game"
-CHANNEL_ENDPOINT = "https://vm146.rz.uni-osnabrueck.de/user058/channel_guess.wsgi"
+CHANNEL_NAME = "The Simple Number Guessing Game"
+CHANNEL_ENDPOINT = "http://vm146.rz.uni-osnabrueck.de/user058/channel_guess.wsgi"
 CHANNEL_FILE = 'messages_guess.json'
 
 bot = GuessingBot()

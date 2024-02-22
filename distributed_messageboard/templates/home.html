@@ -9,12 +9,23 @@
 <body>
 
 <h1>List of message channels</h1>
+
+<hr />
+
 <section id="channels">
     <ul>
         {% for channel in channels %}
-            <li id="channel"><a href="/show?channel={{ channel.endpoint | urlencode }}">{{ channel.name }}</a></li>
+            <li id="channel"><a href="{{ url_for('show_channel', channel=channel.endpoint) }}">{{ channel.name }}</a></li>
         {% endfor %}
     </ul>
 </section>
+<hr />
 </body>
+
+<footer>
+    <p>Created for the course Artificial Intelligence and the Web</p>
+    <p>Author: Eosandra (<a href="mailto:egrund@uos.de" style="color: #a1a5ff;">egrund@uos.de</a>), 
+        Fabian Kirsch(<a href="mailto:fkirsch@uos.de" style="color: #a1a5ff;">fkirsch@uos.de</a>)</p>
+</footer>
+
 </html>

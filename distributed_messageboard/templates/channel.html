@@ -2,31 +2,118 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Channel {{ channel.name }}</title>
+    <!-- Use icon -->
+    {% if channel.name == "The Guessing Game"  %}
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/guessquest.png') }}">
+    {% endif %}
+    {% if channel.name == "The 2D Point Guessing Game" %}
+        <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/CoordinateIcon.jpg') }}">
+    {% endif %}
+    <!-- Include jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Use separate .css file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='mystyle.css') }}">
+
 </head>
 <body>
-<p>The distributed messenger. <a href="{{ url_for('home_page') }}">List of channels.</a> </p>
-{% if channel %}
-    <h1>Channel {{ channel.name }}</h1>
-    <div class="container">
-        {% for message in messages %}
-            <div class="message-container {% if message.user %}right-message{% else %}left-message{% endif %}">
-                <h2>{{ message.sender }}</h2>
-                <p>{{ message.content }}</p>
-                <p class="timestamp">{{ message.timestamp }}</p>
-            </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <h1>Channel not found</h1>
-{% endif %}
+<div class="container">
+    <p>The distributed messenger. <a href="{{ url_for('home_page') }}">List of channels.</a> </p>
+    {% if channel %}
+        <h1>Channel {{ channel.name }}</h1>
+         <!-- Show all messages -->   
+        <div id="messages">
+            {% for message in messages[-100:] %}
+                <div class="message-container {% if message.user %}right-message{% else %}left-message{% endif %}">
+                    <h2>{{ message.sender }}</h2>
+                    <p>{{ message.content | safe }}</p>
+                    <p class="timestamp"> {{ message.timestamp[11:16] + " | " + message.timestamp[8:10] + "." + message.timestamp[5:7] + "." + message.timestamp[0:4]}}</p>
+                </div>
+            {% endfor %}
+        </div>
+        <!-- Indicator for loading -->    
+        <div id="loadingIndicator" style="display: none;">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+         <!-- Input Form to send Messages -->   
+        <form id="messageForm">
+            <input type="hidden" name="channel" value="{{ channel.endpoint | urlencode }}">
+            Sender: <input type="text" name="sender" id="sender"> <br>
+            Message: <input type="text" name="content" id="content"> <br>
+            <input type="submit" value="Post">
+        </form>
+    
+        
+    {% else %}
+        <h1>Channel not found</h1>
+    {% endif %}
+</div>
 
-<form action="post" method="post">
-    <input type="hidden" name="channel" value="{{ channel.endpoint | urlencode }}">
-    Sender: <input type="text" name="sender" id="sender"> <br>
-    Message: <input type="text" name="content" id="content"> <br>
-    <input type="submit" value="Post">
-</form>
+<script>
+    $(document).ready(function() {
+        $('#messageForm').submit(function(e) {
+            e.preventDefault(); // Prevent default form submission
+
+             // Get form input values
+            var sender = $('#sender').val();
+            var content = $('#content').val();
+            var timestamp = new Date().toISOString() // time is 1 hour early
+
+            // Construct HTML for the sender's message
+            var senderMessageHTML = '<div class="message-container right-message">';
+            senderMessageHTML += '<h2>' + sender + '</h2>';
+            senderMessageHTML += '<p>' + content + '</p>';
+            senderMessageHTML += '<p class="timestamp">' + timestamp.slice(11,16) + " | " + timestamp.slice(8,10) + "." + timestamp.slice(5,7) + "." + timestamp.slice(0,4) + '</p>'; // You might need to adjust the timestamp here
+            senderMessageHTML += '</div>';
+
+            // Append sender's message to the messages container
+            $('#messages').append(senderMessageHTML);
+            
+            scrollToBottom();
+
+            // Show loading indicator
+            $('#loadingIndicator').show();
+
+            // Send form data using AJAX
+            $.ajax({
+                url: '/post',
+                type: 'POST',
+                data: $(this).serialize(), // Serialize form data
+                success: function(response) {
+
+                    $('#loadingIndicator').hide();
+
+                    // Update messages by getting the newest entry
+                    var newMessages = $(response).find('.message-container');
+                    var newMessages = newMessages.slice(-1);
+                    $('#messages').append(newMessages);
+                    $('#content').val('');
+
+                    scrollToBottom();
+
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                    $('#loadingIndicator').hide();
+                }
+            });
+        });
+        // Function to scroll to the bottom of the page
+        function scrollToBottom() {
+            $('html, body').animate({ scrollTop: $(document).height() }, 'slow');
+        }
+    });
+</script>
 
 </body>
+
+<footer>
+    <p>Created for the course Artificial Intelligence and the Web</p>
+    <p>Author: Eosandra (<a href="mailto:egrund@uos.de" style="color: #a1a5ff;">egrund@uos.de</a>), 
+        Fabian Kirsch(<a href="mailto:fkirsch@uos.de" style="color: #a1a5ff;">fkirsch@uos.de</a>)</p>
+</footer>
+
 </html>

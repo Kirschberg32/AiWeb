@@ -22,7 +22,7 @@ app.app_context().push()  # create an app context before initializing db
 HUB_URL = 'http://localhost:5555'
 HUB_AUTHKEY = '1234567890'
 CHANNEL_AUTHKEY = '22334455'
-CHANNEL_NAME = "The Guessing Game"
+CHANNEL_NAME = "The Simple Number Guessing Game"
 CHANNEL_ENDPOINT = "http://localhost:5002"
 CHANNEL_FILE = 'messages_guess.json'
 
