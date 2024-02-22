@@ -79,7 +79,7 @@
 
             // Send form data using AJAX
             $.ajax({
-                url: '/post',
+                url: "{{url_for('post_message')}}",
                 type: 'POST',
                 data: $(this).serialize(), // Serialize form data
                 success: function(response) {

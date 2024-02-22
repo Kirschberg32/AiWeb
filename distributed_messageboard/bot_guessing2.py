@@ -28,7 +28,7 @@ class GuessingBot2:
 
         self.point = []
         self.hints = []
-        self.guesses = [ [(20,2), "Eo"], [(2,3), "Fabian"],]
+        self.guesses = []
     
     def apply(self, input : str, sender : str = ""): # input = "Ich schätze 10"
         """ 
